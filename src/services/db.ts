@@ -41,6 +41,12 @@ class DatabaseService {
           db.createObjectStore(STORES.ARTIST_CHAINS, { keyPath: 'id' });
         }
 
+        // Parsed images store
+        if (!db.objectStoreNames.contains(STORES.PARSED_IMAGES)) {
+          const parsedStore = db.createObjectStore(STORES.PARSED_IMAGES, { keyPath: 'id' });
+          parsedStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
         // App state store
         if (!db.objectStoreNames.contains(STORES.APP_STATE)) {
           db.createObjectStore(STORES.APP_STATE, { keyPath: 'key' });

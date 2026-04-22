@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "exifreader": "^4.38.1",
     "vue": "^3.5.12"
   },
   "devDependencies": {

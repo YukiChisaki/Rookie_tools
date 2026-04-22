@@ -5,7 +5,8 @@ import {
   FileText, 
   Palette,
   Sun,
-  Moon
+  Moon,
+  Sparkles
 } from 'lucide-vue-next'
 import { useTagStore } from './stores/tag'
 import { usePromptStore } from './stores/prompt'
@@ -18,11 +19,13 @@ import type { ModuleType } from './types'
 import TagSelector from './modules/tag-selector/index.vue'
 import PromptManager from './modules/prompt-manager/index.vue'
 import ArtistManager from './modules/artist-manager/index.vue'
+import SpellParser from './modules/spell-parser/index.vue'
 
 const currentModule = ref<ModuleType>('tags')
 
 const modules = [
-  { id: 'tags' as ModuleType, label: '标签选择', icon: Tags },
+  { id: 'spell' as ModuleType, label: '魔法解析', icon: Sparkles },
+  { id: 'tags' as ModuleType, label: '标签选择器', icon: Tags },
   { id: 'prompts' as ModuleType, label: '提示词管理', icon: FileText },
   { id: 'artists' as ModuleType, label: '画师管理', icon: Palette },
 ]
@@ -117,6 +120,7 @@ onMounted(async () => {
           <TagSelector v-if="currentModule === 'tags'" key="tags" />
           <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
           <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
+          <SpellParser v-else-if="currentModule === 'spell'" key="spell" />
         </Transition>
       </main>
     </div>
