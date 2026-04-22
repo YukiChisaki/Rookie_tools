@@ -4,27 +4,27 @@
  */
 
 export interface CompressedImages {
-  /** Base64 缩略图数据 (120x120) */
+  /** Base64 缩略图数据 (120x120，用于历史列表) */
   thumbnailData: string;
-  /** Base64 预览图数据 (最大 800x800) */
+  /** Base64 预览图数据 (保持原分辨率，仅压缩质量，用于解析结果页) */
   previewData: string;
 }
 
 export interface CompressOptions {
   /** 缩略图最大尺寸 */
   thumbnailSize?: number;
-  /** 预览图最大尺寸 */
-  previewSize?: number;
-  /** 压缩质量 (0-1) */
-  quality?: number;
+  /** 缩略图压缩质量 (0-1) */
+  thumbnailQuality?: number;
+  /** 预览图压缩质量 (0-1)，保持原分辨率 */
+  previewQuality?: number;
   /** 输出格式 */
   type?: string;
 }
 
 const DEFAULT_OPTIONS: Required<CompressOptions> = {
   thumbnailSize: 120,
-  previewSize: 800,
-  quality: 0.85,
+  thumbnailQuality: 0.8,
+  previewQuality: 0.85,
   type: 'image/jpeg',
 };
 
@@ -72,7 +72,11 @@ function calculateDimensions(
 }
 
 /**
- * 使用 Canvas 压缩图片
+ * 使用 Canvas 压缩图片（可指定最大尺寸或保持原尺寸）
+ * @param img 图片元素
+ * @param maxSize 最大尺寸，0 表示保持原尺寸
+ * @param quality 压缩质量 (0-1)
+ * @param type 输出格式
  */
 function compressWithCanvas(
   img: HTMLImageElement,
@@ -87,7 +91,15 @@ function compressWithCanvas(
     throw new Error('无法创建 Canvas 上下文');
   }
 
-  const { width, height } = calculateDimensions(img.width, img.height, maxSize);
+  // maxSize 为 0 表示保持原尺寸
+  let width = img.width;
+  let height = img.height;
+  
+  if (maxSize > 0) {
+    const dims = calculateDimensions(img.width, img.height, maxSize);
+    width = dims.width;
+    height = dims.height;
+  }
 
   canvas.width = width;
   canvas.height = height;
@@ -122,19 +134,19 @@ export async function compressImage(
     // 加载图片
     const img = await loadImage(dataUrl);
 
-    // 生成缩略图 (120x120)
+    // 生成缩略图 (120x120，小尺寸用于列表展示)
     const thumbnailData = compressWithCanvas(
       img,
       opts.thumbnailSize,
-      opts.quality,
+      opts.thumbnailQuality,
       opts.type
     );
 
-    // 生成预览图 (最大 800x800)
+    // 生成预览图 (保持原分辨率，仅压缩质量，用于解析结果展示)
     const previewData = compressWithCanvas(
       img,
-      opts.previewSize,
-      opts.quality,
+      0, // 0 表示保持原尺寸
+      opts.previewQuality,
       opts.type
     );
 

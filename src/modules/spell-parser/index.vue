@@ -1,13 +1,34 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useSpellStore } from '../../stores/spell';
 import { usePromptStore } from '../../stores/prompt';
+import { CheckCircle2 } from 'lucide-vue-next';
 import ImageUploader from './components/ImageUploader.vue';
 import ParseResult from './components/ParseResult.vue';
 import HistoryList from './components/HistoryList.vue';
 
 const spellStore = useSpellStore();
 const promptStore = usePromptStore();
+
+// Toast 提示状态
+const toast = ref({
+  show: false,
+  message: '',
+  type: 'success' as 'success' | 'error',
+});
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+  // 清除之前的定时器
+  if (toastTimer) clearTimeout(toastTimer);
+
+  toast.value = { show: true, message, type };
+
+  // 3秒后自动关闭
+  toastTimer = setTimeout(() => {
+    toast.value.show = false;
+  }, 3000);
+}
 
 // 加载历史记录
 onMounted(() => {
@@ -42,8 +63,8 @@ async function handleImportToPrompts() {
     image.negativePrompt
   );
 
-  // 可以添加成功提示
-  alert('已导入到提示词管理');
+  // 显示成功提示
+  showToast('已导入到提示词管理');
 }
 
 // 复制提示词
@@ -102,5 +123,31 @@ function handleCloseResult() {
         ×
       </button>
     </div>
+
+    <!-- 成功提示 Toast -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="translate-y-2 opacity-0"
+      enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-2 opacity-0"
+    >
+      <div
+        v-if="toast.show"
+        class="fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border"
+        :class="[
+          toast.type === 'success'
+            ? 'bg-green-50 border-green-200 text-green-800'
+            : 'bg-red-50 border-red-200 text-red-800'
+        ]"
+      >
+        <CheckCircle2
+          v-if="toast.type === 'success'"
+          class="w-5 h-5 text-green-500"
+        />
+        <span class="text-sm font-medium">{{ toast.message }}</span>
+      </div>
+    </Transition>
   </div>
 </template>
