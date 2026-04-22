@@ -63,9 +63,50 @@ export interface ArtistChain {
   createdAt: number;
 }
 
+// ==================== 魔法解析 ====================
+
+export type GeneratorType = 'comfyui' | 'stable-diffusion' | 'novelai' | 'unknown';
+
+export interface ImageParameters {
+  // 基本参数
+  model?: string;
+  modelHash?: string;
+  sampler?: string;
+  scheduler?: string;
+  schedule?: string;
+  steps?: number;
+  cfg?: number;
+  seed?: number;
+  width?: number;
+  height?: number;
+  // 高清修复参数
+  denoisingStrength?: number;
+  hiresUpscale?: number;
+  hiresSteps?: number;
+  hiresUpscaler?: string;
+  hiresCfg?: number;
+  // 其他参数
+  clipSkip?: number;
+  version?: string;
+  // 允许其他扩展参数
+  [key: string]: string | number | undefined;
+}
+
+export interface ParsedImageData {
+  id: string;
+  fileName: string;
+  previewUrl: string;
+  generator: GeneratorType;
+  positivePrompt: string;
+  negativePrompt: string;
+  parameters: ImageParameters;
+  rawMetadata: Record<string, unknown>;
+  createdAt: number;
+}
+
 // ==================== 应用状态 ====================
 
-export type ModuleType = 'tags' | 'prompts' | 'artists';
+export type ModuleType = 'tags' | 'prompts' | 'artists' | 'spell';
 
 export interface AppState {
   currentModule: ModuleType;
@@ -76,12 +117,13 @@ export interface AppState {
 // ==================== IndexedDB ====================
 
 export const DB_NAME = 'RookieToolsDB';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export const STORES = {
   TAGS: 'tags',
   PROMPTS: 'prompts',
   ARTISTS: 'artists',
   ARTIST_CHAINS: 'artistChains',
+  PARSED_IMAGES: 'parsedImages',
   APP_STATE: 'appState',
 } as const;
