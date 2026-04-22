@@ -596,6 +596,27 @@ export async function parseImage(file: File): Promise<ParseResult> {
         break;
     }
 
+    // 从 EXIF/PNG 元数据中提取图片基本信息（宽高等）
+    const imageWidth = tags['Image Width']?.value || tags['ImageWidth']?.value || tags['ExifImageWidth']?.value;
+    const imageHeight = tags['Image Height']?.value || tags['ImageHeight']?.value || tags['ExifImageHeight']?.value;
+
+    if (imageWidth !== undefined || imageHeight !== undefined) {
+      console.log('[SpellParser] 从 EXIF 提取到图片尺寸:', imageWidth, 'x', imageHeight);
+    }
+
+    // 合并参数，优先使用解析器提取的参数，如果没有则使用 EXIF 中的
+    const mergedParameters = {
+      ...parsedData.parameters,
+    };
+
+    // 如果解析器没有提取到宽高，则从 EXIF 中获取
+    if (mergedParameters.width === undefined && imageWidth !== undefined) {
+      mergedParameters.width = typeof imageWidth === 'string' ? parseInt(imageWidth, 10) : imageWidth;
+    }
+    if (mergedParameters.height === undefined && imageHeight !== undefined) {
+      mergedParameters.height = typeof imageHeight === 'string' ? parseInt(imageHeight, 10) : imageHeight;
+    }
+
     // 创建图片预览 URL
     const previewUrl = URL.createObjectURL(file);
 
@@ -607,7 +628,7 @@ export async function parseImage(file: File): Promise<ParseResult> {
       generator,
       positivePrompt: parsedData.positivePrompt || '',
       negativePrompt: parsedData.negativePrompt || '',
-      parameters: parsedData.parameters || {},
+      parameters: mergedParameters,
       rawMetadata: tags as Record<string, unknown>,
       createdAt: Date.now(),
     };
