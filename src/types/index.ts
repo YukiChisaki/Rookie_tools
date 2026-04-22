@@ -45,30 +45,6 @@ export interface PromptRecord {
   updatedAt: number;
 }
 
-// ==================== 图片解析 ====================
-
-export interface ParsedImageMetadata {
-  positive: string;
-  negative: string;
-  model?: string;
-  sampler?: string;
-  steps?: number;
-  cfg?: number;
-  seed?: number;
-  width?: number;
-  height?: number;
-  workflow?: object;
-}
-
-export interface ParsedImage {
-  id: string;
-  fileName: string;
-  originalBlob: Blob;
-  thumbnailBlob: Blob;
-  metadata: ParsedImageMetadata;
-  parsedAt: number;
-}
-
 // ==================== 画师管理 ====================
 
 export interface Artist {
@@ -89,7 +65,7 @@ export interface ArtistChain {
 
 // ==================== 应用状态 ====================
 
-export type ModuleType = 'parser' | 'tags' | 'prompts' | 'artists';
+export type ModuleType = 'tags' | 'prompts' | 'artists';
 
 export interface AppState {
   currentModule: ModuleType;
@@ -105,7 +81,6 @@ export const DB_VERSION = 1;
 export const STORES = {
   TAGS: 'tags',
   PROMPTS: 'prompts',
-  PARSED_IMAGES: 'parsedImages',
   ARTISTS: 'artists',
   ARTIST_CHAINS: 'artistChains',
   APP_STATE: 'appState',

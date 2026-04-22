@@ -29,12 +29,6 @@ class DatabaseService {
           promptStore.createIndex('updatedAt', 'updatedAt', { unique: false });
         }
 
-        // Parsed images store
-        if (!db.objectStoreNames.contains(STORES.PARSED_IMAGES)) {
-          const imageStore = db.createObjectStore(STORES.PARSED_IMAGES, { keyPath: 'id' });
-          imageStore.createIndex('parsedAt', 'parsedAt', { unique: false });
-        }
-
         // Artists store
         if (!db.objectStoreNames.contains(STORES.ARTISTS)) {
           const artistStore = db.createObjectStore(STORES.ARTISTS, { keyPath: 'id' });

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { 
-  ImagePlus, 
   Tags, 
   FileText, 
   Palette,
@@ -11,21 +10,18 @@ import {
 import { useTagStore } from './stores/tag'
 import { usePromptStore } from './stores/prompt'
 import { useArtistStore } from './stores/artist'
-import { useImageStore } from './stores/image'
 import { useTagLoader } from './composables/useTagLoader'
 import { useArtistLoader } from './composables/useArtistLoader'
 import type { ModuleType } from './types'
 
 // Modules
-import ImageMetaParser from './modules/image-meta-parser/index.vue'
 import TagSelector from './modules/tag-selector/index.vue'
 import PromptManager from './modules/prompt-manager/index.vue'
 import ArtistManager from './modules/artist-manager/index.vue'
 
-const currentModule = ref<ModuleType>('parser')
+const currentModule = ref<ModuleType>('tags')
 
 const modules = [
-  { id: 'parser' as ModuleType, label: '图片解析', icon: ImagePlus },
   { id: 'tags' as ModuleType, label: '标签选择', icon: Tags },
   { id: 'prompts' as ModuleType, label: '提示词管理', icon: FileText },
   { id: 'artists' as ModuleType, label: '画师管理', icon: Palette },
@@ -34,7 +30,6 @@ const modules = [
 const tagStore = useTagStore()
 const promptStore = usePromptStore()
 const artistStore = useArtistStore()
-const imageStore = useImageStore()
 
 // Dark mode toggle
 const isDark = ref(false)
@@ -69,7 +64,6 @@ onMounted(async () => {
   await Promise.all([
     promptStore.loadPrompts(),
     artistStore.loadArtists(),
-    imageStore.loadParsedImages(),
   ])
 })
 </script>
@@ -77,32 +71,31 @@ onMounted(async () => {
 <template>
   <div class="h-screen w-screen bg-background flex flex-col overflow-hidden">
     <!-- Top Header Bar -->
-    <header class="h-[60px] bg-background-secondary border-b border-border flex items-center justify-between px-6 shrink-0">
-      <!-- Logo with Blue Background -->
+    <header class="h-[64px] bg-card border-b border-border flex items-center justify-between px-6 shrink-0">
+      <!-- Logo -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%); box-shadow: 0 4px 14px rgba(52, 152, 219, 0.35);">
           <span class="text-white font-bold text-xl leading-none">R</span>
         </div>
         <div class="flex flex-col">
-          <h1 class="text-foreground font-semibold text-lg leading-tight">Rookie Tools</h1>
-          <span class="text-foreground-tertiary text-xs">ComfyUI Prompt Toolbox</span>
+          <h1 class="text-foreground font-bold text-lg leading-tight tracking-tight">Rookie Tools</h1>
         </div>
       </div>
 
       <!-- Theme Toggle Button -->
       <button
         @click="toggleTheme"
-        class="p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-muted transition-all duration-200"
-        :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
+        class="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+        :title="isDark ? '浅色模式' : '深色模式'"
       >
-        <component :is="themeIcon" class="w-5 h-5" />
+        <component :is="themeIcon" class="w-[18px] h-[18px]" />
       </button>
     </header>
 
     <!-- Main Content Area -->
     <div class="flex-1 flex overflow-hidden">
       <!-- Left Aside Sidebar with Navigation -->
-      <aside class="w-20 lg:w-56 bg-background-secondary border-r border-border flex flex-col py-4 shrink-0">
+      <aside class="w-[72px] lg:w-60 bg-card border-r border-border flex flex-col py-3 shrink-0">
         <nav class="flex-1 flex flex-col gap-1 px-2">
           <button
             v-for="mod in modules"
@@ -110,7 +103,9 @@ onMounted(async () => {
             @click="currentModule = mod.id"
             :class="['aside-nav-item', { active: currentModule === mod.id }]"
           >
-            <component :is="mod.icon" class="aside-nav-icon w-5 h-5 shrink-0" />
+            <div class="nav-icon-wrapper">
+              <component :is="mod.icon" class="aside-nav-icon w-[18px] h-[18px] shrink-0" />
+            </div>
             <span class="aside-nav-label">{{ mod.label }}</span>
           </button>
         </nav>
@@ -119,8 +114,7 @@ onMounted(async () => {
       <!-- Main Content -->
       <main class="flex-1 overflow-hidden bg-background">
         <Transition name="fade" mode="out-in">
-          <ImageMetaParser v-if="currentModule === 'parser'" key="parser" />
-          <TagSelector v-else-if="currentModule === 'tags'" key="tags" />
+          <TagSelector v-if="currentModule === 'tags'" key="tags" />
           <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
           <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
         </Transition>
@@ -142,25 +136,58 @@ onMounted(async () => {
 
 /* Aside Navigation Styles */
 .aside-nav-item {
-  @apply flex items-center gap-3 px-3 py-3 rounded-xl text-foreground-secondary
-         hover:text-foreground hover:bg-muted transition-all duration-200 cursor-pointer;
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer;
+  color: #64748b;
+}
+.dark .aside-nav-item {
+  color: #94a3b8;
+}
+
+.aside-nav-item:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+.dark .aside-nav-item:hover {
+  background-color: #334155;
+  color: #f8fafc;
 }
 
 .aside-nav-item.active {
-  @apply bg-primary/10 border border-primary/30;
+  background-color: rgba(52, 152, 219, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.2);
+  color: #3498db;
+}
+.dark .aside-nav-item.active {
+  background-color: rgba(52, 152, 219, 0.15);
+  border: 1px solid rgba(52, 152, 219, 0.3);
 }
 
 .aside-nav-item.active .aside-nav-label {
-  @apply text-primary;
+  color: #3498db;
+  font-weight: 600;
+}
+
+/* Nav icon wrapper */
+.nav-icon-wrapper {
+  @apply flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-all duration-200;
+  background-color: rgba(243, 104, 224, 0.1);
+}
+
+.aside-nav-item:hover .nav-icon-wrapper {
+  background-color: rgba(243, 104, 224, 0.15);
+}
+
+.aside-nav-item.active .nav-icon-wrapper {
+  background-color: rgba(52, 152, 219, 0.15);
 }
 
 /* Pink icon color */
 .aside-nav-icon {
-  @apply text-secondary;
+  color: #f368e0;
 }
 
 .aside-nav-item.active .aside-nav-icon {
-  @apply text-secondary;
+  color: #3498db;
 }
 
 /* Label hidden on small screens, visible on large */

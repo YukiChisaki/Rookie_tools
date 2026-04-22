@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Search, Copy, X, Plus, Minus } from 'lucide-vue-next'
+import { Search, Copy, X, Plus, Minus, Tag as TagIcon } from 'lucide-vue-next'
 import { useTagStore } from '../../stores/tag'
 import { TAG_CATEGORY_LABELS, type TagCategory, type Tag } from '../../types'
 
@@ -86,16 +86,21 @@ function getSelectedTagObjects(): (Tag & { weight: number })[] {
 <template>
   <div class="h-full flex flex-col p-6 overflow-hidden">
     <!-- Header -->
-    <header class="mb-4">
-      <h1 class="text-2xl font-semibold text-foreground mb-2">标签选择器</h1>
-      <p class="text-foreground-secondary text-sm">
+    <!-- <header class="mb-4">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%);">
+          <TagIcon class="w-4 h-4 text-white" />
+        </div>
+        <h1 class="text-2xl font-bold text-foreground">标签选择器</h1>
+      </div>
+      <p class="text-muted-foreground text-sm ml-11">
         点击标签添加到选择，支持权重调整
       </p>
-    </header>
+    </header> -->
 
     <!-- Search Bar -->
     <div class="relative mb-4">
-      <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-tertiary" />
+      <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
       <input
         v-model="tagStore.searchQuery"
         @input="(e) => tagStore.setSearchQuery((e.target as HTMLInputElement).value)"
@@ -106,37 +111,38 @@ function getSelectedTagObjects(): (Tag & { weight: number })[] {
     </div>
 
     <!-- Category Tabs -->
-    <div class="flex gap-1 mb-4 overflow-x-auto scrollbar-thin pb-1">
+    <div class="flex gap-1.5 mb-4 overflow-x-auto scrollbar-thin pb-1">
       <button
         v-for="cat in categories"
         :key="cat"
         @click="tagStore.setSelectedCategory(cat)"
         :class="[
-          'px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors',
+          'px-3.5 py-1.5 rounded-xl text-sm whitespace-nowrap transition-all duration-200 font-medium',
           tagStore.selectedCategory === cat
-            ? 'bg-primary text-white'
-            : 'bg-background-tertiary text-foreground-secondary hover:bg-white/10'
+            ? 'text-white shadow-md'
+            : 'bg-card text-muted-foreground hover:text-foreground border border-border'
         ]"
+        :style="tagStore.selectedCategory === cat ? 'background: linear-gradient(135deg, #3498db 0%, #5dade2 100%); box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);' : ''"
       >
         {{ cat === 'all' ? '全部' : TAG_CATEGORY_LABELS[cat] }}
       </button>
     </div>
 
     <!-- Selected Tags Bar -->
-    <div v-if="selectedTags.size > 0" class="mb-4 p-3 bg-primary/10 rounded-xl border border-primary/20">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-sm font-medium text-primary">已选择 {{ selectedTags.size }} 个标签</span>
-        <div class="flex gap-2">
+    <div v-if="selectedTags.size > 0" class="mb-4 p-4 rounded-2xl border transition-all duration-200" style="background: linear-gradient(135deg, rgba(52,152,219,0.06) 0%, rgba(243,104,224,0.04) 100%); border-color: rgba(52,152,219,0.15);">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-semibold" style="color: #3498db;">已选择 {{ selectedTags.size }} 个标签</span>
+        <div class="flex gap-1.5">
           <button
             @click="copySelectedTags"
-            class="p-1.5 text-primary hover:bg-primary/20 rounded-lg transition-colors"
+            class="w-8 h-8 flex items-center justify-center text-[#3498db] hover:bg-[rgba(52,152,219,0.1)] rounded-lg transition-colors"
             title="复制到剪贴板"
           >
             <Copy class="w-4 h-4" />
           </button>
           <button
             @click="clearSelection"
-            class="p-1.5 text-foreground-tertiary hover:text-error hover:bg-error/10 rounded-lg transition-colors"
+            class="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-[#ef4444] hover:bg-[rgba(239,68,68,0.08)] rounded-lg transition-colors"
             title="清空选择"
           >
             <X class="w-4 h-4" />
@@ -147,26 +153,27 @@ function getSelectedTagObjects(): (Tag & { weight: number })[] {
         <div
           v-for="tagObj in getSelectedTagObjects()"
           :key="tagObj.id"
-          class="flex items-center gap-1 px-2 py-1 bg-primary text-white rounded-lg text-sm"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-white shadow-sm"
+          style="background: linear-gradient(135deg, #3498db 0%, #5dade2 100%);"
         >
           <span>{{ tagObj.name }}</span>
-          <span v-if="tagObj.weight !== 1" class="text-primary-light text-xs">({{ tagObj.weight }})</span>
-          <div class="flex items-center ml-1 border-l border-white/20 pl-1">
+          <span v-if="tagObj.weight !== 1" class="text-white/80 text-xs">({{ tagObj.weight }})</span>
+          <div class="flex items-center ml-1 border-l border-white/25 pl-1.5 gap-0.5">
             <button
               @click="updateWeight(tagObj.id, -0.1)"
-              class="p-0.5 hover:bg-white/20 rounded"
+              class="w-5 h-5 flex items-center justify-center hover:bg-white/20 rounded-md transition-colors"
             >
               <Minus class="w-3 h-3" />
             </button>
             <button
               @click="updateWeight(tagObj.id, 0.1)"
-              class="p-0.5 hover:bg-white/20 rounded"
+              class="w-5 h-5 flex items-center justify-center hover:bg-white/20 rounded-md transition-colors"
             >
               <Plus class="w-3 h-3" />
             </button>
             <button
               @click="removeTag(tagObj.id)"
-              class="p-0.5 hover:bg-white/20 rounded ml-1"
+              class="w-5 h-5 flex items-center justify-center hover:bg-white/20 rounded-md transition-colors ml-0.5"
             >
               <X class="w-3 h-3" />
             </button>
@@ -189,7 +196,7 @@ function getSelectedTagObjects(): (Tag & { weight: number })[] {
           ]"
         >
           {{ tag.name }}
-          <span v-if="selectedTags.has(tag.id)" class="text-xs">
+          <span v-if="selectedTags.has(tag.id)" class="text-xs opacity-80">
             ({{ selectedTags.get(tag.id) }})
           </span>
         </button>
@@ -201,9 +208,10 @@ function getSelectedTagObjects(): (Tag & { weight: number })[] {
           v-for="(catTags, category) in displayedTags"
           :key="category"
         >
-          <h3 class="text-sm font-medium text-foreground-secondary mb-3 sticky top-0 bg-background py-2">
+          <h3 class="text-sm font-bold text-muted-foreground mb-3 sticky top-0 bg-background py-2 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full" style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%);"></span>
             {{ TAG_CATEGORY_LABELS[category as TagCategory] }}
-            <span class="text-foreground-tertiary ml-1">({{ catTags.length }})</span>
+            <span class="text-muted-foreground/60 font-normal ml-1">({{ catTags.length }})</span>
           </h3>
           <div class="flex flex-wrap gap-2">
             <button
@@ -216,7 +224,7 @@ function getSelectedTagObjects(): (Tag & { weight: number })[] {
               ]"
             >
               {{ tag.name }}
-              <span v-if="selectedTags.has(tag.id)" class="text-xs">
+              <span v-if="selectedTags.has(tag.id)" class="text-xs opacity-80">
                 ({{ selectedTags.get(tag.id) }})
               </span>
             </button>
