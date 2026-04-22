@@ -72,16 +72,35 @@ function handleGlobalDragLeave(event: DragEvent) {
   }
 }
 
+// 粘贴上传处理
+function handlePaste(event: ClipboardEvent) {
+  const items = event.clipboardData?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    // 检查是否是图片类型
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file && isValidImage(file)) {
+        emit('upload', file);
+        break; // 只处理第一个图片
+      }
+    }
+  }
+}
+
 onMounted(() => {
   window.addEventListener('dragover', handleGlobalDragOver);
   window.addEventListener('drop', handleGlobalDrop);
   window.addEventListener('dragleave', handleGlobalDragLeave);
+  window.addEventListener('paste', handlePaste);
 });
 
 onUnmounted(() => {
   window.removeEventListener('dragover', handleGlobalDragOver);
   window.removeEventListener('drop', handleGlobalDrop);
   window.removeEventListener('dragleave', handleGlobalDragLeave);
+  window.removeEventListener('paste', handlePaste);
 });
 </script>
 
@@ -140,11 +159,11 @@ onUnmounted(() => {
         </div>
 
         <h3 class="text-xl font-semibold text-foreground mb-2">
-          点击上传或将图片拖到页面任意位置
+          点击上传、拖拽或粘贴图片
         </h3>
 
         <p class="text-sm text-muted-foreground mb-4">
-          支持 PNG、JPEG、WebP 等格式，浏览器本地处理不上传云端
+          支持 PNG、JPEG、WebP 等格式，可拖拽或按 Ctrl+V 粘贴图片
         </p>
 
         <div class="flex items-center gap-2 text-xs text-muted-foreground/70">
