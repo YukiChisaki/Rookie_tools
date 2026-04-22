@@ -61,7 +61,7 @@ function handleCloseResult() {
 <template>
   <div class="h-full flex">
     <!-- 左侧历史记录 -->
-    <div class="w-80 bg-card border-r border-border flex flex-col shrink-0">
+    <div class="w-60 bg-card border-r border-border flex flex-col shrink-0">
       <HistoryList
         :images="spellStore.sortedImages"
         :current-id="spellStore.currentImage?.id"

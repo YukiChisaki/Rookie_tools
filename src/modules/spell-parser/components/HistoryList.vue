@@ -64,8 +64,8 @@ function handleDelete(event: MouseEvent, id: string) {
     <!-- 头部 -->
     <div class="p-4 border-b border-border">
       <h2 class="text-lg font-bold text-foreground">解析历史</h2>
-      <p class="text-xs text-muted-foreground mt-1">
-        共 {{ images.length }} 条记录
+      <p class="text-xs text-muted-foreground">
+        共 <span class="font-bold">{{ sortedImages.length }}</span> 条记录
       </p>
     </div>
 
@@ -85,7 +85,13 @@ function handleDelete(event: MouseEvent, id: string) {
         <!-- 缩略图 -->
         <div class="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
           <img
-            v-if="image.previewUrl"
+            v-if="image.thumbnailData"
+            :src="image.thumbnailData"
+            :alt="image.fileName"
+            class="w-full h-full object-cover"
+          />
+          <img
+            v-else-if="image.previewUrl"
             :src="image.previewUrl"
             :alt="image.fileName"
             class="w-full h-full object-cover"

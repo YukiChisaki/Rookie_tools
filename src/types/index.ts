@@ -95,7 +95,12 @@ export interface ImageParameters {
 export interface ParsedImageData {
   id: string;
   fileName: string;
-  previewUrl: string;
+  /** @deprecated 请使用 thumbnailData 和 previewData */
+  previewUrl?: string;
+  /** Base64 缩略图数据 (120x120)，用于历史列表展示 */
+  thumbnailData: string;
+  /** Base64 预览图数据 (最大 800x800)，用于解析结果页展示 */
+  previewData: string;
   generator: GeneratorType;
   positivePrompt: string;
   negativePrompt: string;

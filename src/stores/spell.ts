@@ -80,9 +80,9 @@ export const useSpellStore = defineStore('spell', () => {
       );
 
       if (existingIndex !== -1) {
-        // 删除旧的预览 URL
+        // 删除旧记录（旧数据可能使用 previewUrl，需要释放）
         const oldImage = parsedImages.value[existingIndex];
-        if (oldImage.previewUrl !== image.previewUrl) {
+        if (oldImage.previewUrl && oldImage.previewUrl !== image.previewData) {
           revokePreviewUrl(oldImage.previewUrl);
         }
 
@@ -99,7 +99,10 @@ export const useSpellStore = defineStore('spell', () => {
       if (parsedImages.value.length > MAX_HISTORY_ITEMS) {
         const removed = parsedImages.value.splice(MAX_HISTORY_ITEMS);
         for (const img of removed) {
-          revokePreviewUrl(img.previewUrl);
+          // 兼容旧数据：如果存在 previewUrl 则释放
+          if (img.previewUrl) {
+            revokePreviewUrl(img.previewUrl);
+          }
           await db.delete(STORES.PARSED_IMAGES, img.id);
         }
       }
@@ -113,8 +116,10 @@ export const useSpellStore = defineStore('spell', () => {
       const image = parsedImages.value.find((img) => img.id === id);
       if (!image) return;
 
-      // 释放预览 URL
-      revokePreviewUrl(image.previewUrl);
+      // 兼容旧数据：如果存在 previewUrl 则释放
+      if (image.previewUrl) {
+        revokePreviewUrl(image.previewUrl);
+      }
 
       // 从数据库删除
       await db.delete(STORES.PARSED_IMAGES, id);
@@ -162,9 +167,11 @@ export const useSpellStore = defineStore('spell', () => {
    */
   async function clearAllHistory() {
     try {
-      // 释放所有预览 URL
+      // 兼容旧数据：释放所有 previewUrl
       for (const image of parsedImages.value) {
-        revokePreviewUrl(image.previewUrl);
+        if (image.previewUrl) {
+          revokePreviewUrl(image.previewUrl);
+        }
       }
 
       // 清空数据库

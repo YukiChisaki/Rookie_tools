@@ -1,5 +1,6 @@
 import ExifReader from 'exifreader';
 import type { ParsedImageData, GeneratorType } from '../types';
+import { compressImage } from '../utils/imageCompressor';
 
 interface RawMetadata {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -617,14 +618,34 @@ export async function parseImage(file: File): Promise<ParseResult> {
       mergedParameters.height = typeof imageHeight === 'string' ? parseInt(imageHeight, 10) : imageHeight;
     }
 
-    // 创建图片预览 URL
-    const previewUrl = URL.createObjectURL(file);
+    // 压缩图片
+    console.log('[SpellParser] 开始压缩图片...');
+    let thumbnailData: string;
+    let previewData: string;
+    try {
+      const compressed = await compressImage(file);
+      thumbnailData = compressed.thumbnailData;
+      previewData = compressed.previewData;
+      console.log('[SpellParser] 图片压缩完成');
+    } catch (compressError) {
+      console.error('[SpellParser] 图片压缩失败，使用原图:', compressError);
+      // 如果压缩失败，使用原图的 Data URL
+      const reader = new FileReader();
+      const originalDataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      thumbnailData = originalDataUrl;
+      previewData = originalDataUrl;
+    }
 
     // 构建解析结果
     const result: ParsedImageData = {
       id: crypto.randomUUID(),
       fileName: file.name,
-      previewUrl,
+      thumbnailData,
+      previewData,
       generator,
       positivePrompt: parsedData.positivePrompt || '',
       negativePrompt: parsedData.negativePrompt || '',
@@ -656,10 +677,14 @@ export async function parseImage(file: File): Promise<ParseResult> {
 }
 
 /**
- * 释放预览 URL
+ * 释放预览 URL（向后兼容，现在使用 Base64 数据不再需要通过 URL.revokeObjectURL 释放）
+ * @deprecated 新代码不需要调用此方法，Base64 数据无需释放
  */
 export function revokePreviewUrl(url: string): void {
-  URL.revokeObjectURL(url);
+  // 保留对 blob URL 的处理，兼容旧数据
+  if (url && url.startsWith('blob:')) {
+    URL.revokeObjectURL(url);
+  }
 }
 
 /**
@@ -668,7 +693,7 @@ export function revokePreviewUrl(url: string): void {
 export function formatGeneratorName(generator: GeneratorType): string {
   const names: Record<GeneratorType, string> = {
     comfyui: 'ComfyUI',
-    'stable-diffusion': 'Stable Diffusion',
+    'stable-diffusion': 'WebUI',
     novelai: 'NovelAI',
     unknown: '未知',
   };

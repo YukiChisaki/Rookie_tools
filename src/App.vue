@@ -21,7 +21,7 @@ import PromptManager from './modules/prompt-manager/index.vue'
 import ArtistManager from './modules/artist-manager/index.vue'
 import SpellParser from './modules/spell-parser/index.vue'
 
-const currentModule = ref<ModuleType>('tags')
+const currentModule = ref<ModuleType>('spell')
 
 const modules = [
   { id: 'spell' as ModuleType, label: '魔法解析', icon: Sparkles },
@@ -98,7 +98,7 @@ onMounted(async () => {
     <!-- Main Content Area -->
     <div class="flex-1 flex overflow-hidden">
       <!-- Left Aside Sidebar with Navigation -->
-      <aside class="w-[72px] lg:w-60 bg-card border-r border-border flex flex-col py-3 shrink-0">
+      <aside class="w-[72px] lg:w-40 bg-card border-r border-border flex flex-col py-3 shrink-0">
         <nav class="flex-1 flex flex-col gap-1 px-2">
           <button
             v-for="mod in modules"
@@ -117,10 +117,11 @@ onMounted(async () => {
       <!-- Main Content -->
       <main class="flex-1 overflow-hidden bg-background">
         <Transition name="fade" mode="out-in">
-          <TagSelector v-if="currentModule === 'tags'" key="tags" />
+          <!-- <TagSelector v-if="currentModule === 'tags'" key="tags" /> -->
+          <!-- <ArtistManager v-else-if="currentModule === 'artists'" key="artists" /> -->
+          <SpellParser v-if="currentModule === 'spell'" key="spell" />
           <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
-          <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
-          <SpellParser v-else-if="currentModule === 'spell'" key="spell" />
+
         </Transition>
       </main>
     </div>
