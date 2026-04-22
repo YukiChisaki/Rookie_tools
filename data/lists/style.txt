@@ -1,0 +1,22 @@
+# Style tags
+anime style
+realistic
+photorealistic
+watercolor painting
+oil painting
+digital art
+concept art
+sketch
+line art
+chibi style
+pixel art
+3d render
+minimalist
+abstract
+surrealism
+fantasy art
+sci-fi
+cyberpunk
+steampunk
+vintage
+retro

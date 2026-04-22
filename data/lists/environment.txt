@@ -1,0 +1,22 @@
+# Environment tags
+indoor
+outdoor
+forest
+mountain
+beach
+ocean
+city
+street
+room
+bedroom
+kitchen
+garden
+park
+ruins
+castle
+temple
+space
+sky
+night
+sunset
+sunrise

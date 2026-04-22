@@ -1,0 +1,17 @@
+# Lighting tags
+soft lighting
+dramatic lighting
+cinematic lighting
+natural lighting
+sunlight
+moonlight
+backlight
+rim light
+volumetric lighting
+god rays
+lens flare
+glowing
+shadows
+dark
+bright
+contrast
