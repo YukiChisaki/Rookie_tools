@@ -83,7 +83,8 @@ async function handleImportToPrompts() {
     image.positivePrompt,
     image.negativePrompt,
     image.thumbnailData,
-    image.previewData
+    image.previewData,
+    image.parameters
   );
 
   console.log('[SpellParser] 已导入到提示词管理:', {

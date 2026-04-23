@@ -45,6 +45,8 @@ export interface PromptRecord {
   thumbnailData?: string;
   /** Base64预览图数据(短边>900时缩放到900px)，用于弹窗大图展示 */
   previewData?: string;
+  /** 图片生成参数（从魔法解析导入时携带） */
+  parameters?: ImageParameters;
   createdAt: number;
   updatedAt: number;
 }

@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { db } from '../services/db';
-import type { PromptRecord, TagWithWeight } from '../types';
+import type { PromptRecord, TagWithWeight, ImageParameters } from '../types';
 import { STORES } from '../types';
 import { compressImage } from '../utils/imageCompressor';
 
@@ -38,6 +38,7 @@ export const usePromptStore = defineStore('prompt', () => {
     source?: 'manual' | 'parsed';
     thumbnailData?: string;
     previewData?: string;
+    parameters?: ImageParameters;
   }): Promise<PromptRecord> {
     const now = Date.now();
     const prompt: PromptRecord = {
@@ -49,6 +50,7 @@ export const usePromptStore = defineStore('prompt', () => {
       source: data.source || 'manual',
       thumbnailData: data.thumbnailData,
       previewData: data.previewData,
+      parameters: data.parameters,
       createdAt: now,
       updatedAt: now,
     };
@@ -127,7 +129,8 @@ export const usePromptStore = defineStore('prompt', () => {
     positive: string,
     negative: string,
     thumbnailData?: string,
-    previewData?: string
+    previewData?: string,
+    parameters?: ImageParameters
   ): Promise<PromptRecord> {
     return createPrompt({
       name,
@@ -136,6 +139,7 @@ export const usePromptStore = defineStore('prompt', () => {
       source: 'parsed',
       thumbnailData,
       previewData,
+      parameters,
     });
   }
 

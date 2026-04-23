@@ -25,6 +25,7 @@ onMounted(() => {
   console.log('[PromptManager] 加载的提示词数量:', promptStore.prompts.length);
   promptStore.prompts.forEach((p, i) => {
     console.log(`[PromptManager] 提示词 ${i}:`, {
+      p,
       id: p.id,
       name: p.name,
       hasThumbnail: !!p.thumbnailData,
@@ -419,10 +420,12 @@ async function copyFullPrompt() {
 
             <!-- 弹窗内容 -->
             <div class="flex-1 overflow-hidden">
+               
               <PromptDetailViewer
                 :name="selectedPrompt.name"
                 :positive="selectedPrompt.positive"
                 :negative="selectedPrompt.negative"
+                :parameters="selectedPrompt.parameters"
                 :preview-data="selectedPrompt.previewData"
                 :show-image="true"
                 :show-actions="true"
