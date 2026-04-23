@@ -3,12 +3,15 @@ import { onMounted, ref } from 'vue';
 import { useSpellStore } from '../../stores/spell';
 import { usePromptStore } from '../../stores/prompt';
 import { CheckCircle2 } from 'lucide-vue-next';
+import { useDialog, useMessage } from 'naive-ui';
 import ImageUploader from './components/ImageUploader.vue';
 import ParseResult from './components/ParseResult.vue';
 import HistoryList from './components/HistoryList.vue';
 
 const spellStore = useSpellStore();
 const promptStore = usePromptStore();
+const dialog = useDialog();
+const message = useMessage();
 
 // Toast 提示状态
 const toast = ref({
@@ -46,8 +49,17 @@ async function handleSelectFromHistory(image: import('../../types').ParsedImageD
 }
 
 // 删除历史记录
-async function handleDeleteHistory(id: string) {
-  await spellStore.deleteFromHistory(id);
+function handleDeleteHistory(id: string) {
+  dialog.warning({
+    title: '确认删除',
+    content: '确定要删除这条解析记录吗？此操作不可恢复。',
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      await spellStore.deleteFromHistory(id);
+      message.success('解析记录已删除');
+    },
+  });
 }
 
 // 导入到提示词管理
