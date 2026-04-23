@@ -14,8 +14,7 @@ import {
 import { MasonryWall } from '@yeger/vue-masonry-wall';
 import { useDialog, useMessage } from 'naive-ui';
 import { usePromptStore } from '../../stores/prompt';
-import type { PromptRecord } from '../../types';
-import PromptDetailViewer from '../../components/PromptDetailViewer.vue';
+import type { PromptRecord, ImageParameters } from '../../types';
 import { compressImage } from '../../utils/imageCompressor';
 
 const promptStore = usePromptStore();
@@ -282,6 +281,21 @@ function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
   console.log(`已复制 ${type}:`, text.substring(0, 50) + '...');
 }
 
+// 处理详情弹窗的保存事件
+async function handleSaveFromDetail(data: { name: string; positive: string; negative: string; parameters: ImageParameters }) {
+  if (!selectedPrompt.value) return;
+
+  await promptStore.updatePrompt(selectedPrompt.value.id, {
+    name: data.name,
+    positive: data.positive,
+    negative: data.negative,
+    parameters: data.parameters,
+  });
+
+  message.success('提示词已保存');
+  closeDetailModal();
+}
+
 // 复制全部提示词
 async function copyFullPrompt() {
   if (!selectedPrompt.value) return;
@@ -414,10 +428,11 @@ async function copyFullPrompt() {
 
       <!-- 弹窗内容 -->
       <div class="max-h-[70vh] overflow-y-auto">
-        <PromptDetailViewer v-if="selectedPrompt" :name="selectedPrompt.name" :positive="selectedPrompt.positive"
+        <PromptDetailForm v-if="selectedPrompt" :name="selectedPrompt.name" :positive="selectedPrompt.positive"
           :negative="selectedPrompt.negative" :parameters="selectedPrompt.parameters"
           :preview-data="selectedPrompt.previewData" :show-image="false" :show-actions="true" :show-delete="true"
-          @copy="handleCopy" @delete="deletePrompt(selectedPrompt.id)" />
+          @copy="handleCopy" @delete="deletePrompt(selectedPrompt.id)" @save="handleSaveFromDetail"
+          @cancel="closeDetailModal" />
       </div>
     </n-modal>
 

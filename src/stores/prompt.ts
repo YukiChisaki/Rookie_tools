@@ -95,11 +95,15 @@ export const usePromptStore = defineStore('prompt', () => {
     const prompt = prompts.value.find(p => p.id === id);
     if (!prompt) return;
 
-    const updated = {
+    const raw = {
       ...prompt,
       ...updates,
       updatedAt: Date.now(),
     };
+
+    // 深拷贝去除所有层级的 Vue 响应式代理，否则 IndexedDB put() 会报 DataCloneError
+    // toRaw 仅剥一层 Proxy，对嵌套的 reactive 对象无效
+    const updated = JSON.parse(JSON.stringify(raw));
 
     await db.put(STORES.PROMPTS, updated);
     const index = prompts.value.findIndex(p => p.id === id);

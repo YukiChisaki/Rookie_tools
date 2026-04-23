@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    copy: typeof import('./components/PromptDetailForm.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
@@ -27,6 +28,7 @@ declare module 'vue' {
     NTextarea: typeof import('naive-ui')['NTextarea']
     NUpload: typeof import('naive-ui')['NUpload']
     NUploadDragger: typeof import('naive-ui')['NUploadDragger']
+    PromptDetailForm: typeof import('./components/PromptDetailForm.vue')['default']
     PromptDetailViewer: typeof import('./components/PromptDetailViewer.vue')['default']
   }
 }
