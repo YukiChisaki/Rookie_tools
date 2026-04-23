@@ -141,7 +141,6 @@ export async function compressImage(
       opts.thumbnailQuality,
       opts.type
     );
-
     // 生成预览图 (保持原分辨率，仅压缩质量，用于解析结果展示)
     const previewData = compressWithCanvas(
       img,
