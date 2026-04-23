@@ -14,8 +14,10 @@ declare module 'vue' {
     NButton: typeof import('naive-ui')['NButton']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
+    NInput: typeof import('naive-ui')['NInput']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NModal: typeof import('naive-ui')['NModal']
+    NUpload: typeof import('naive-ui')['NUpload']
     PromptDetailViewer: typeof import('./components/PromptDetailViewer.vue')['default']
   }
 }

@@ -117,10 +117,10 @@ function closeEditModal() {
 }
 
 // 处理图片选择
-function handleImageSelect(event: Event) {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files[0]) {
-    editForm.value.imageFile = input.files[0];
+function handleImageSelect(data: { fileList: { file: File }[] }) {
+  const file = data.fileList[0]?.file;
+  if (file) {
+    editForm.value.imageFile = file;
   }
 }
 
@@ -284,12 +284,12 @@ async function copyFullPrompt() {
               <!-- Hover 遮罩层 - 顶部信息 -->
               <div class="absolute inset-x-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div class="flex items-center justify-between bg-black/40  px-3 py-2">
-                  <span class="text-xs text-white/90">
+                  <span class="text-sm text-white/90">
                     {{ formatDate(prompt.updatedAt) }}
                   </span>
                   <span v-if="prompt.source === 'parsed'"
-                    class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-white bg-[#3498db]">
-                    解析
+                    class="px-2 py-0.5 rounded-md text-sm font-semibold text-white bg-[#3498db]">
+                    魔法
                   </span>
                   <span v-else class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-white/90 bg-white/20">
                     手动
@@ -317,149 +317,129 @@ async function copyFullPrompt() {
     </div>
 
     <!-- 详情弹窗 -->
-    <Teleport to="body">
-      <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0"
-        enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100"
-        leave-to-class="opacity-0">
-        <div v-if="showDetailModal && selectedPrompt"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          @click.self="closeDetailModal">
-          <div
-            class="w-full max-w-4xl max-h-[90vh] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col">
-            <!-- 弹窗头部 -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
-              <div class="flex items-center gap-3">
-                <h2 class="text-lg font-bold text-foreground">
-                  {{ selectedPrompt.name }}
-                </h2>
-                <span v-if="selectedPrompt.source === 'parsed'"
-                  class="px-2 py-0.5 rounded-lg text-xs font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]">
-                  解析导入
-                </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <button @click="copyFullPrompt()" class="btn-secondary text-sm flex items-center gap-2">
-                  <Copy class="w-4 h-4" />
-                  复制全部
-                </button>
-                <button @click="closeDetailModal"
-                  class="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors">
-                  <X class="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <!-- 弹窗内容 -->
-            <div class="flex-1 overflow-hidden">
-
-              <PromptDetailViewer :name="selectedPrompt.name" :positive="selectedPrompt.positive"
-                :negative="selectedPrompt.negative" :parameters="selectedPrompt.parameters"
-                :preview-data="selectedPrompt.previewData" :show-image="false" :show-actions="true" :show-delete="true"
-                @copy="handleCopy" @delete="deletePrompt(selectedPrompt.id)" />
-            </div>
-            <!-- 底部操作栏 -->
-
+    <n-modal v-model:show="showDetailModal" preset="card" style="width: 900px; max-width: 95vw" :mask-closable="true"
+      class="prompt-detail-modal">
+      <template #header>
+        <div class="flex items-center justify-between w-full pr-8">
+          <div class="flex items-center gap-3">
+            <h2 class="text-lg font-bold text-foreground">
+              {{ selectedPrompt?.name }}
+            </h2>
+            <span v-if="selectedPrompt?.source === 'parsed'"
+              class="px-2 py-0.5 rounded-lg text-xs font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]">
+              魔法
+            </span>
           </div>
-
+          <!-- <div class="flex items-center gap-2">
+            <button @click="copyFullPrompt()" class="btn-secondary text-sm flex items-center gap-2">
+              <Copy class="w-4 h-4" />
+              复制全部
+            </button>
+          </div> -->
         </div>
-      </Transition>
-    </Teleport>
+      </template>
+
+      <!-- 弹窗内容 -->
+      <div class="max-h-[70vh] overflow-y-auto">
+        <PromptDetailViewer v-if="selectedPrompt" :name="selectedPrompt.name" :positive="selectedPrompt.positive"
+          :negative="selectedPrompt.negative" :parameters="selectedPrompt.parameters"
+          :preview-data="selectedPrompt.previewData" :show-image="false" :show-actions="true" :show-delete="true"
+          @copy="handleCopy" @delete="deletePrompt(selectedPrompt.id)" />
+      </div>
+    </n-modal>
 
     <!-- 编辑/新建弹窗 -->
-    <Teleport to="body">
-      <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0"
-        enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100"
-        leave-to-class="opacity-0">
-        <div v-if="showEditModal"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          @click.self="closeEditModal">
-          <div
-            class="w-full max-w-2xl max-h-[90vh] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col">
-            <!-- 弹窗头部 -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
-              <h2 class="text-lg font-bold text-foreground">
-                {{ isCreating ? '新建提示词' : '编辑提示词' }}
-              </h2>
-              <button @click="closeEditModal"
-                class="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors">
-                <X class="w-5 h-5" />
-              </button>
+    <n-modal v-model:show="showEditModal" preset="card" style="width: 672px; max-width: 95vw" :mask-closable="false"
+      :closable="false" class="prompt-edit-modal">
+      <template #header>
+        <div class="flex items-center justify-between w-full">
+          <h2 class="text-lg font-bold text-foreground">
+            {{ isCreating ? '新建提示词' : '编辑提示词' }}
+          </h2>
+          <n-button quaternary circle size="small" @click="closeEditModal">
+            <template #icon>
+              <X class="w-5 h-5" />
+            </template>
+          </n-button>
+        </div>
+      </template>
+
+      <!-- 表单内容 -->
+      <div class="max-h-[60vh] overflow-y-auto p-2 space-y-5">
+        <!-- 名称 -->
+        <div>
+          <label class="block text-sm font-medium text-foreground mb-2">
+            提示词名称
+          </label>
+          <n-input v-model:value="editForm.name" placeholder="输入提示词名称..." />
+        </div>
+
+        <!-- 图片上传 -->
+        <div>
+          <label class="block text-sm font-medium text-foreground mb-2">
+            预览图片
+          </label>
+          <div class="flex items-center gap-4">
+            <div v-if="editForm.previewData || editForm.imageFile"
+              class="w-24 h-24 rounded-lg overflow-hidden border border-border">
+              <img v-if="editForm.imageFile" :src="URL.createObjectURL(editForm.imageFile)"
+                class="w-full h-full object-cover" />
+              <img v-else-if="editForm.previewData" :src="editForm.previewData" class="w-full h-full object-cover" />
             </div>
-
-            <!-- 表单内容 -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-5">
-              <!-- 名称 -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-2">
-                  提示词名称
-                </label>
-                <input v-model="editForm.name" type="text" class="input-field" placeholder="输入提示词名称..." />
-              </div>
-
-              <!-- 图片上传 -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-2">
-                  预览图片
-                </label>
-                <div class="flex items-center gap-4">
-                  <div v-if="editForm.previewData || editForm.imageFile"
-                    class="w-24 h-24 rounded-lg overflow-hidden border border-border">
-                    <img v-if="editForm.imageFile" :src="URL.createObjectURL(editForm.imageFile)"
-                      class="w-full h-full object-cover" />
-                    <img v-else-if="editForm.previewData" :src="editForm.previewData"
-                      class="w-full h-full object-cover" />
-                  </div>
-                  <div class="flex-1">
-                    <label
-                      class="inline-flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-xl cursor-pointer transition-colors">
-                      <ImageIcon class="w-4 h-4" />
-                      <span class="text-sm">
-                        {{ editForm.previewData || editForm.imageFile ? '更换图片' : '选择图片' }}
-                      </span>
-                      <input type="file" accept="image/*" class="hidden" @change="handleImageSelect" />
-                    </label>
-                    <p class="text-xs text-muted-foreground mt-2">
-                      支持 PNG、JPG、WebP 格式，图片将被压缩后存储
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 正向提示词 -->
-              <div>
-                <label
-                  class="block text-sm font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                  正向提示词
-                </label>
-                <textarea v-model="editForm.positive" rows="5"
-                  class="input-field resize-none font-mono text-sm leading-relaxed" placeholder="输入正向提示词..."></textarea>
-              </div>
-
-              <!-- 负向提示词 -->
-              <div>
-                <label class="block text-sm font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                  负向提示词
-                </label>
-                <textarea v-model="editForm.negative" rows="4"
-                  class="input-field resize-none font-mono text-sm leading-relaxed" placeholder="输入负向提示词..."></textarea>
-              </div>
-            </div>
-
-            <!-- 底部按钮 -->
-            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
-              <button @click="closeEditModal"
-                class="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-                取消
-              </button>
-              <button @click="savePrompt" class="btn-primary text-sm">
-                {{ isCreating ? '创建' : '保存' }}
-              </button>
+            <div class="flex-1">
+              <n-upload accept="image/*" :show-file-list="false" @change="handleImageSelect">
+                <n-button>
+                  <template #icon>
+                    <ImageIcon class="w-4 h-4" />
+                  </template>
+                  {{ editForm.previewData || editForm.imageFile ? '更换图片' : '选择图片' }}
+                </n-button>
+              </n-upload>
+              <p class="text-xs text-muted-foreground mt-2">
+                支持 PNG、JPG、WebP 格式，图片将被压缩后存储
+              </p>
             </div>
           </div>
         </div>
-      </Transition>
-    </Teleport>
+
+        <!-- 正向提示词 -->
+        <div>
+          <label class="text-sm font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+            正向提示词
+          </label>
+          <n-input v-model:value="editForm.positive" type="textarea" :rows="5" placeholder="输入正向提示词..." />
+        </div>
+
+        <!-- 负向提示词 -->
+        <div>
+          <label class="text-sm font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            负向提示词
+          </label>
+          <n-input v-model:value="editForm.negative" type="textarea" :rows="4" placeholder="输入负向提示词..." />
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex items-center justify-between w-full">
+          <n-button v-if="!isCreating && editForm.id" type="error" ghost @click="deletePrompt(editForm.id!)">
+            <template #icon>
+              <Trash2 class="w-4 h-4" />
+            </template>
+            删除
+          </n-button>
+          <div v-else></div>
+          <div class="flex items-center gap-3">
+            <n-button @click="closeEditModal">
+              取消
+            </n-button>
+            <n-button type="primary" @click="savePrompt">
+              {{ isCreating ? '创建' : '保存' }}
+            </n-button>
+          </div>
+        </div>
+      </template>
+    </n-modal>
   </div>
 </template>
