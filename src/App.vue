@@ -80,6 +80,8 @@ onMounted(async () => {
 
 <template>
   <n-config-provider :theme="naiveTheme" :theme-overrides="currentThemeOverrides">
+  <n-dialog-provider>
+  <n-message-provider>
   <div class="h-screen w-screen bg-background flex flex-col overflow-hidden">
     <!-- Top Header Bar -->
     <header class="h-[64px] bg-card border-b border-border flex items-center justify-between px-6 shrink-0">
@@ -134,6 +136,8 @@ onMounted(async () => {
       </main>
     </div>
   </div>
+  </n-message-provider>
+  </n-dialog-provider>
   </n-config-provider>
 </template>
 

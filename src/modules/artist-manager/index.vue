@@ -12,12 +12,15 @@ import {
   Users,
   Palette
 } from 'lucide-vue-next'
+import { useDialog, useMessage } from 'naive-ui'
 import { useArtistStore } from '../../stores/artist'
 import { useTagStore } from '../../stores/tag'
 import type { Artist, ArtistChain } from '../../types'
 
 const artistStore = useArtistStore()
 const tagStore = useTagStore()
+const dialog = useDialog()
+const message = useMessage()
 
 const activeTab = ref<'artists' | 'chains'>('artists')
 const searchQuery = ref('')
@@ -94,10 +97,17 @@ function editChain(chain: ArtistChain) {
   activeTab.value = 'chains'
 }
 
-async function deleteChain(chainId: string) {
-  if (confirm('确定要删除这个画师串吗？')) {
-    await artistStore.deleteChain(chainId)
-  }
+function deleteChain(chainId: string) {
+  dialog.warning({
+    title: '确认删除',
+    content: '确定要删除这个画师串吗？此操作不可恢复。',
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      await artistStore.deleteChain(chainId)
+      message.success('画师串已删除')
+    },
+  })
 }
 
 function toggleArtistForChain(artistId: string) {

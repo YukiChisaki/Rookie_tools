@@ -12,6 +12,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+    NDialogProvider: typeof import('naive-ui')['NDialogProvider']
+    NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     PromptDetailViewer: typeof import('./components/PromptDetailViewer.vue')['default']
   }
 }

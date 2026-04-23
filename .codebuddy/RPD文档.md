@@ -428,6 +428,57 @@ interface CompressOptions {
 | v0.3 | 魔法解析模块（PNG参数解析） | - |
 | v1.0 | 完整功能，UI 优化，主题切换 | - |
 
+## 8. 推荐 Skills
+
+为提升开发效率和代码质量，本项目建议使用以下 CodeBuddy Skills：
+
+### 8.1 核心 Skills
+
+| Skill | 优先级 | 适用场景 | 主要功能 |
+|-------|-------|---------|---------|
+| `naive-ui` | 🔴 高 | UI 组件开发 | 33 条规则涵盖：核心配置、表单验证、数据展示、主题定制、样式冲突解决等 |
+| `vue` | 🔴 高 | Vue 3 开发 | Composition API、script setup 语法、响应式系统、组件通信、TypeScript 集成 |
+| `vite` | 🟡 中 | 构建配置 | Vite 配置优化、插件开发、HMR、生产构建 |
+
+### 8.2 设计/UX Skills
+
+| Skill | 优先级 | 适用场景 | 主要功能 |
+|-------|-------|---------|---------|
+| `ui-ux-pro-max` | 🟡 中 | 界面设计 | 50+ 设计风格、21 种配色、50 种字体组合、动画效果、Tailwind CSS 支持 |
+| `frontend-design` | 🟢 低 | 快速原型 | 现代化 UI 组件、页面布局、响应式设计 |
+
+### 8.3 使用场景对照表
+
+| 开发任务 | 推荐 Skill | 说明 |
+|---------|-----------|------|
+| 配置 Naive UI 主题/暗黑模式 | `naive-ui` | 主题覆盖、CSS 变量、useThemeVars |
+| 实现表单验证 | `naive-ui` | Form 组件、验证规则、错误提示 |
+| 开发 DataTable 虚拟滚动 | `naive-ui` | 大数据集处理、远程数据加载 |
+| 编写 Vue 组件 | `vue` | setup 语法、defineProps/defineEmits |
+| 状态管理设计 | `vue` + `naive-ui` | Pinia + 组件状态 |
+| 调整 Vite 配置 | `vite` | 路径别名、插件配置、构建优化 |
+| UI 界面美化 | `ui-ux-pro-max` | 配色方案、组件样式、动画效果 |
+| 响应式布局 | `ui-ux-pro-max` | Tailwind CSS 最佳实践 |
+
+### 8.4 安装命令
+
+```bash
+# naive-ui (已安装)
+npx skills add sepush/naive-ui-skills@naive-ui -g -y
+
+# vue
+npx skills add vuejs/skills@vue -g -y
+
+# vite
+npx skills add vercel-labs/agent-skills@vite -g -y
+
+# ui-ux-pro-max
+npx skills add design-skills/ui-ux-pro-max -g -y
+
+# frontend-design
+npx skills add frontend-design-skills/frontend-design -g -y
+```
+
 ---
 
 *文档版本：1.0*  

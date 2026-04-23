@@ -10,12 +10,15 @@ import {
   ImageIcon,
 } from 'lucide-vue-next';
 import { MasonryWall } from '@yeger/vue-masonry-wall';
+import { useDialog, useMessage } from 'naive-ui';
 import { usePromptStore } from '../../stores/prompt';
 import type { PromptRecord } from '../../types';
 import PromptDetailViewer from '../../components/PromptDetailViewer.vue';
 import { compressImage } from '../../utils/imageCompressor';
 
 const promptStore = usePromptStore();
+const dialog = useDialog();
+const message = useMessage();
 
 // Debug: 检查提示词数据
 onMounted(() => {
@@ -141,7 +144,7 @@ async function savePrompt() {
       });
     } catch (error) {
       console.error('[PromptManager] 图片压缩失败:', error);
-      alert('图片压缩失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      message.error('图片压缩失败: ' + (error instanceof Error ? error.message : '未知错误'));
       return;
     }
   }
@@ -181,16 +184,23 @@ async function savePrompt() {
 }
 
 // 删除提示词
-async function deletePrompt(id: string) {
-  if (confirm('确定要删除这个提示词吗？')) {
-    await promptStore.deletePrompt(id);
-    if (selectedPrompt.value?.id === id) {
-      closeDetailModal();
-    }
-    if (showEditModal.value && editForm.value.id === id) {
-      closeEditModal();
-    }
-  }
+function deletePrompt(id: string) {
+  dialog.warning({
+    title: '确认删除',
+    content: '确定要删除这个提示词吗？此操作不可恢复。',
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      await promptStore.deletePrompt(id);
+      if (selectedPrompt.value?.id === id) {
+        closeDetailModal();
+      }
+      if (showEditModal.value && editForm.value.id === id) {
+        closeEditModal();
+      }
+      message.success('提示词已删除');
+    },
+  });
 }
 
 // 格式化日期
