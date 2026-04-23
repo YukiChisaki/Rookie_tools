@@ -287,11 +287,13 @@ function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
       >
         <template #default="{ item: prompt }">
           <div
-            @click="openDetailModal(prompt)"
             class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]"
           >
             <!-- 图片区域 -->
-            <div class="bg-muted/50 relative overflow-hidden">
+            <div
+              class="bg-muted/50 relative overflow-hidden"
+              @click="openDetailModal(prompt)"
+            >
               <img
                 v-if="prompt.previewData"
                 :src="prompt.previewData"
@@ -309,52 +311,47 @@ function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
                 </div>
               </div>
 
-              <!-- Hover 遮罩层 -->
+              <!-- Hover 遮罩层 - 顶部信息 -->
               <div
-                class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                class="absolute inset-x-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               >
-                <div class="absolute bottom-3 left-3 right-3 flex gap-2">
-                  <button
-                    @click.stop="openEditModal(prompt)"
-                    class="flex-1 py-1.5 bg-white/90 text-foreground text-xs font-medium rounded-lg hover:bg-white transition-colors flex items-center justify-center gap-1"
+                <div class="flex items-center justify-between bg-black/40  px-3 py-2">
+                  <span class="text-xs text-white/90">
+                    {{ formatDate(prompt.updatedAt) }}
+                  </span>
+                  <span
+                    v-if="prompt.source === 'parsed'"
+                    class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-white bg-[#3498db]"
                   >
-                    <Edit3 class="w-3 h-3" />
-                    编辑
-                  </button>
-                  <button
-                    @click.stop="deletePrompt(prompt.id)"
-                    class="w-8 h-7 bg-white/90 text-red-500 rounded-lg hover:bg-white transition-colors flex items-center justify-center"
+                    解析
+                  </span>
+                  <span
+                    v-else
+                    class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-white/90 bg-white/20"
                   >
-                    <Trash2 class="w-3 h-3" />
-                  </button>
+                    手动
+                  </span>
                 </div>
               </div>
-            </div>
 
-            <!-- 信息区域 -->
-            <div class="p-3">
-              <h3
-                class="font-semibold text-foreground text-sm truncate mb-1.5"
-                :title="prompt.name"
+              <!-- Hover 遮罩层 - 底部信息 -->
+              <div
+                class="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               >
-                {{ prompt.name }}
-              </h3>
-              <div class="flex items-center justify-between">
-                <span class="text-xs text-muted-foreground">
-                  {{ formatDate(prompt.updatedAt) }}
-                </span>
-                <span
-                  v-if="prompt.source === 'parsed'"
-                  class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]"
-                >
-                  解析
-                </span>
-                <span
-                  v-else
-                  class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-muted-foreground bg-muted"
-                >
-                  手动
-                </span>
+                <div class="flex items-center justify-between gap-2 bg-black/40 px-3 py-2">
+                  <h3
+                    class="font-medium text-white text-sm truncate flex-1"
+                    :title="prompt.name"
+                  >
+                    {{ prompt.name }}
+                  </h3>
+                  <button
+                    @click.stop="deletePrompt(prompt.id)"
+                    class="w-7 h-7 bg-white text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center flex-shrink-0"
+                  >
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
