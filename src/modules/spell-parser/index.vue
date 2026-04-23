@@ -69,13 +69,30 @@ async function handleImportToPrompts() {
   const image = spellStore.currentImage;
   const name = image.fileName.replace(/\.[^/.]+$/, '') || '解析的提示词';
 
-  console.log('[SpellParser] 导入到提示词管理:', {
-    name,
+  // 详细日志：检查所有要导入的数据
+  console.log('[SpellParser] ========== 开始导入到提示词管理 ==========');
+  console.log('[SpellParser] 图片基本信息:', {
+    id: image.id,
+    fileName: image.fileName,
+    generator: image.generator,
+  });
+  console.log('[SpellParser] 提示词数据:', {
+    positivePrompt: image.positivePrompt?.substring(0, 100) || '(空)',
+    positivePromptLength: image.positivePrompt?.length || 0,
+    negativePrompt: image.negativePrompt?.substring(0, 100) || '(空)',
+    negativePromptLength: image.negativePrompt?.length || 0,
+  });
+  console.log('[SpellParser] 参数数据:', {
+    hasParameters: !!image.parameters,
+    parameters: image.parameters ? JSON.stringify(image.parameters, null, 2) : '(undefined)',
+  });
+  console.log('[SpellParser] 图片数据:', {
     hasThumbnailData: !!image.thumbnailData,
     hasPreviewData: !!image.previewData,
     thumbnailDataLength: image.thumbnailData?.length,
-    thumbnailPreview: image.thumbnailData?.substring(0, 50) + '...',
+    previewDataLength: image.previewData?.length,
   });
+  console.log('[SpellParser] ========== 调用 importFromMetadata ==========');
 
   // 传递图片数据到提示词管理
   const newPrompt = await promptStore.importFromMetadata(
@@ -87,9 +104,18 @@ async function handleImportToPrompts() {
     image.parameters
   );
 
-  console.log('[SpellParser] 已导入到提示词管理:', {
+  console.log('[SpellParser] ========== 导入完成 ==========');
+  console.log('[SpellParser] 已导入的提示词:', {
     id: newPrompt.id,
+    name: newPrompt.name,
+    positive: newPrompt.positive?.substring(0, 100) || '(空)',
+    positiveLength: newPrompt.positive?.length || 0,
+    negative: newPrompt.negative?.substring(0, 100) || '(空)',
+    negativeLength: newPrompt.negative?.length || 0,
+    hasParameters: !!newPrompt.parameters,
+    parameters: newPrompt.parameters ? JSON.stringify(newPrompt.parameters, null, 2) : '(undefined)',
     hasThumbnail: !!newPrompt.thumbnailData,
+    hasPreview: !!newPrompt.previewData,
   });
 
   // 显示成功提示

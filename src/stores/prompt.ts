@@ -41,6 +41,12 @@ export const usePromptStore = defineStore('prompt', () => {
     parameters?: ImageParameters;
   }): Promise<PromptRecord> {
     const now = Date.now();
+    
+    // 深拷贝 parameters，去除可能的不可克隆属性（如 getter、原型链等）
+    const cleanParameters = data.parameters 
+      ? JSON.parse(JSON.stringify(data.parameters)) 
+      : undefined;
+    
     const prompt: PromptRecord = {
       id: crypto.randomUUID(),
       name: data.name,
@@ -50,14 +56,18 @@ export const usePromptStore = defineStore('prompt', () => {
       source: data.source || 'manual',
       thumbnailData: data.thumbnailData,
       previewData: data.previewData,
-      parameters: data.parameters,
+      parameters: cleanParameters,
       createdAt: now,
       updatedAt: now,
     };
 
-    console.log('[PromptStore] 创建提示词:', {
+    console.log('[PromptStore] createPrompt 构建的 PromptRecord:', {
       id: prompt.id,
       name: prompt.name,
+      positiveLength: prompt.positive?.length || 0,
+      negativeLength: prompt.negative?.length || 0,
+      hasParameters: !!prompt.parameters,
+      parametersKeys: prompt.parameters ? Object.keys(prompt.parameters) : 'none',
       hasThumbnail: !!prompt.thumbnailData,
       thumbnailLength: prompt.thumbnailData?.length,
     });
@@ -67,8 +77,13 @@ export const usePromptStore = defineStore('prompt', () => {
 
     // 验证保存后的数据
     const saved = await db.get<PromptRecord>(STORES.PROMPTS, prompt.id);
-    console.log('[PromptStore] 保存到数据库后:', {
+    console.log('[PromptStore] 保存到数据库后验证:', {
       id: saved?.id,
+      name: saved?.name,
+      positiveLength: saved?.positive?.length || 0,
+      negativeLength: saved?.negative?.length || 0,
+      hasParameters: !!saved?.parameters,
+      parametersKeys: saved?.parameters ? Object.keys(saved.parameters) : 'none',
       hasThumbnail: !!saved?.thumbnailData,
       thumbnailLength: saved?.thumbnailData?.length,
     });
@@ -132,6 +147,15 @@ export const usePromptStore = defineStore('prompt', () => {
     previewData?: string,
     parameters?: ImageParameters
   ): Promise<PromptRecord> {
+    console.log('[PromptStore] importFromMetadata 接收参数:', {
+      name,
+      positiveLength: positive?.length || 0,
+      negativeLength: negative?.length || 0,
+      hasThumbnail: !!thumbnailData,
+      hasPreview: !!previewData,
+      hasParameters: !!parameters,
+      parametersKeys: parameters ? Object.keys(parameters) : 'none',
+    });
     return createPrompt({
       name,
       positive,
