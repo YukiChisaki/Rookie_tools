@@ -73,7 +73,6 @@ function handleClose() {
         @copy="handleCopy" />
 
       <!-- 完整元数据 -->
-
       <MetadataViewer :metadata="image.rawMetadata" />
 
     </div>
