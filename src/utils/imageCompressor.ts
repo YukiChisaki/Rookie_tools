@@ -28,6 +28,9 @@ const DEFAULT_OPTIONS: Required<CompressOptions> = {
   type: 'image/jpeg',
 };
 
+/** 预览图短边最大尺寸 */
+const PREVIEW_MAX_SHORT_EDGE = 900;
+
 /**
  * 读取文件为 Data URL
  */
@@ -94,7 +97,7 @@ function compressWithCanvas(
   // maxSize 为 0 表示保持原尺寸
   let width = img.width;
   let height = img.height;
-  
+
   if (maxSize > 0) {
     const dims = calculateDimensions(img.width, img.height, maxSize);
     width = dims.width;
@@ -110,6 +113,71 @@ function compressWithCanvas(
 
   // 绘制图片
   ctx.drawImage(img, 0, 0, width, height);
+
+  // 导出为 Base64
+  return canvas.toDataURL(type, quality);
+}
+
+/**
+ * 计算短边自适应缩放后的尺寸
+ * 如果短边大于 maxShortEdge，则将短边缩放到 maxShortEdge，长边等比缩放
+ * 如果短边小于等于 maxShortEdge，保持原尺寸
+ * @param originalWidth 原始宽度
+ * @param originalHeight 原始高度
+ * @param maxShortEdge 短边最大尺寸
+ */
+function calculateDimensionsByShortEdge(
+  originalWidth: number,
+  originalHeight: number,
+  maxShortEdge: number
+): { width: number; height: number } {
+  const shortEdge = Math.min(originalWidth, originalHeight);
+
+  // 短边小于等于限制，保持原尺寸
+  if (shortEdge <= maxShortEdge) {
+    return { width: originalWidth, height: originalHeight };
+  }
+
+  // 短边大于限制，按比例缩放
+  const ratio = maxShortEdge / shortEdge;
+  return {
+    width: Math.round(originalWidth * ratio),
+    height: Math.round(originalHeight * ratio),
+  };
+}
+
+/**
+ * 压缩图片 - 短边自适应模式
+ * 如果图片短边大于 maxShortEdge，则将短边缩放到 maxShortEdge
+ * @param img 图片元素
+ * @param maxShortEdge 短边最大尺寸
+ * @param quality 压缩质量 (0-1)
+ * @param type 输出格式
+ */
+function compressWithShortEdgeLimit(
+  img: HTMLImageElement,
+  maxShortEdge: number,
+  quality: number,
+  type: string
+): string {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('无法创建 Canvas 上下文');
+  }
+
+  const dims = calculateDimensionsByShortEdge(img.width, img.height, maxShortEdge);
+
+  canvas.width = dims.width;
+  canvas.height = dims.height;
+
+  // 使用高质量缩放
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // 绘制图片
+  ctx.drawImage(img, 0, 0, dims.width, dims.height);
 
   // 导出为 Base64
   return canvas.toDataURL(type, quality);
@@ -141,10 +209,11 @@ export async function compressImage(
       opts.thumbnailQuality,
       opts.type
     );
-    // 生成预览图 (保持原分辨率，仅压缩质量，用于解析结果展示)
-    const previewData = compressWithCanvas(
+    // 生成预览图 (短边自适应压缩，用于弹窗大图展示)
+    // 如果短边大于900px，则缩放到900px；否则保持原尺寸
+    const previewData = compressWithShortEdgeLimit(
       img,
-      0, // 0 表示保持原尺寸
+      PREVIEW_MAX_SHORT_EDGE,
       opts.previewQuality,
       opts.type
     );

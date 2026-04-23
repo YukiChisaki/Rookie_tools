@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { db } from '../services/db';
 import type { PromptRecord, TagWithWeight } from '../types';
 import { STORES } from '../types';
+import { compressImage } from '../utils/imageCompressor';
 
 export const usePromptStore = defineStore('prompt', () => {
   // State
@@ -35,6 +36,8 @@ export const usePromptStore = defineStore('prompt', () => {
     negative: string;
     tags?: TagWithWeight[];
     source?: 'manual' | 'parsed';
+    thumbnailData?: string;
+    previewData?: string;
   }): Promise<PromptRecord> {
     const now = Date.now();
     const prompt: PromptRecord = {
@@ -44,12 +47,30 @@ export const usePromptStore = defineStore('prompt', () => {
       negative: data.negative,
       tags: data.tags || [],
       source: data.source || 'manual',
+      thumbnailData: data.thumbnailData,
+      previewData: data.previewData,
       createdAt: now,
       updatedAt: now,
     };
 
+    console.log('[PromptStore] 创建提示词:', {
+      id: prompt.id,
+      name: prompt.name,
+      hasThumbnail: !!prompt.thumbnailData,
+      thumbnailLength: prompt.thumbnailData?.length,
+    });
+
     await db.put(STORES.PROMPTS, prompt);
     prompts.value.unshift(prompt);
+
+    // 验证保存后的数据
+    const saved = await db.get<PromptRecord>(STORES.PROMPTS, prompt.id);
+    console.log('[PromptStore] 保存到数据库后:', {
+      id: saved?.id,
+      hasThumbnail: !!saved?.thumbnailData,
+      thumbnailLength: saved?.thumbnailData?.length,
+    });
+
     return prompt;
   }
 
@@ -100,17 +121,48 @@ export const usePromptStore = defineStore('prompt', () => {
     };
   }
 
-  // Import from parsed image metadata
+  // Import from parsed image metadata with image data
   async function importFromMetadata(
     name: string,
     positive: string,
-    negative: string
+    negative: string,
+    thumbnailData?: string,
+    previewData?: string
   ): Promise<PromptRecord> {
     return createPrompt({
       name,
       positive,
       negative,
       source: 'parsed',
+      thumbnailData,
+      previewData,
+    });
+  }
+
+  // Create prompt with image file (compresses image automatically)
+  async function createPromptWithImage(
+    data: {
+      name: string;
+      positive: string;
+      negative: string;
+      tags?: TagWithWeight[];
+    },
+    imageFile?: File
+  ): Promise<PromptRecord> {
+    let thumbnailData: string | undefined;
+    let previewData: string | undefined;
+
+    if (imageFile) {
+      const compressed = await compressImage(imageFile);
+      thumbnailData = compressed.thumbnailData;
+      previewData = compressed.previewData;
+    }
+
+    return createPrompt({
+      ...data,
+      source: 'manual',
+      thumbnailData,
+      previewData,
     });
   }
 
@@ -127,5 +179,6 @@ export const usePromptStore = defineStore('prompt', () => {
     setCurrentPrompt,
     createEmptyPrompt,
     importFromMetadata,
+    createPromptWithImage,
   };
 });

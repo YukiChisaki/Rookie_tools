@@ -1,177 +1,264 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { 
-  Plus, 
-  Save, 
-  Copy, 
-  Trash2, 
-  FileText, 
+import { ref, computed, onMounted } from 'vue';
+import {
+  Plus,
   Search,
   X,
-  PenLine
-} from 'lucide-vue-next'
-import { usePromptStore } from '../../stores/prompt'
-import type { PromptRecord } from '../../types'
+  FileText,
+  Trash2,
+  Edit3,
+  ImageIcon,
+} from 'lucide-vue-next';
+import { usePromptStore } from '../../stores/prompt';
+import type { PromptRecord } from '../../types';
+import PromptDetailViewer from '../../components/PromptDetailViewer.vue';
+import { compressImage } from '../../utils/imageCompressor';
 
-const promptStore = usePromptStore()
+const promptStore = usePromptStore();
 
-const searchQuery = ref('')
-const isEditing = ref(false)
-const editingPrompt = ref<PromptRecord | null>(null)
+// Debug: 检查提示词数据
+onMounted(() => {
+  console.log('[PromptManager] 加载的提示词数量:', promptStore.prompts.length);
+  promptStore.prompts.forEach((p, i) => {
+    console.log(`[PromptManager] 提示词 ${i}:`, {
+      id: p.id,
+      name: p.name,
+      hasThumbnail: !!p.thumbnailData,
+      thumbnailLength: p.thumbnailData?.length || 0,
+      thumbnailPreview: p.thumbnailData?.substring(0, 50) + '...',
+    });
+  });
+});
 
+// 搜索和筛选
+const searchQuery = ref('');
 const filteredPrompts = computed(() => {
-  if (!searchQuery.value.trim()) return promptStore.sortedPrompts
-  const query = searchQuery.value.toLowerCase()
-  return promptStore.sortedPrompts.filter(p =>
-    p.name.toLowerCase().includes(query) ||
-    p.positive.toLowerCase().includes(query)
-  )
-})
+  if (!searchQuery.value.trim()) return promptStore.sortedPrompts;
+  const query = searchQuery.value.toLowerCase();
+  return promptStore.sortedPrompts.filter(
+    (p) =>
+      p.name.toLowerCase().includes(query) ||
+      p.positive.toLowerCase().includes(query)
+  );
+});
 
-function createNewPrompt() {
-  editingPrompt.value = promptStore.createEmptyPrompt()
-  isEditing.value = true
+// 弹窗状态
+const showDetailModal = ref(false);
+const showEditModal = ref(false);
+const selectedPrompt = ref<PromptRecord | null>(null);
+const isCreating = ref(false);
+
+// 编辑表单
+const editForm = ref<{
+  id?: string;
+  name: string;
+  positive: string;
+  negative: string;
+  imageFile?: File;
+  thumbnailData?: string;
+  previewData?: string;
+}>({
+  name: '',
+  positive: '',
+  negative: '',
+});
+
+// 打开详情弹窗
+function openDetailModal(prompt: PromptRecord) {
+  selectedPrompt.value = prompt;
+  showDetailModal.value = true;
 }
 
-function editPrompt(prompt: PromptRecord) {
-  editingPrompt.value = { ...prompt }
-  isEditing.value = true
+// 关闭详情弹窗
+function closeDetailModal() {
+  showDetailModal.value = false;
+  selectedPrompt.value = null;
 }
 
-async function savePrompt() {
-  if (!editingPrompt.value) return
-  
-  if (promptStore.prompts.find(p => p.id === editingPrompt.value!.id)) {
-    await promptStore.updatePrompt(editingPrompt.value.id, {
-      name: editingPrompt.value.name,
-      positive: editingPrompt.value.positive,
-      negative: editingPrompt.value.negative,
-    })
-  } else {
-    await promptStore.createPrompt({
-      name: editingPrompt.value.name,
-      positive: editingPrompt.value.positive,
-      negative: editingPrompt.value.negative,
-    })
+// 打开新建弹窗
+function openCreateModal() {
+  isCreating.value = true;
+  editForm.value = {
+    name: '新建提示词',
+    positive: '',
+    negative: '',
+  };
+  showEditModal.value = true;
+}
+
+// 打开编辑弹窗
+function openEditModal(prompt: PromptRecord) {
+  isCreating.value = false;
+  editForm.value = {
+    id: prompt.id,
+    name: prompt.name,
+    positive: prompt.positive,
+    negative: prompt.negative,
+    thumbnailData: prompt.thumbnailData,
+    previewData: prompt.previewData,
+  };
+  showDetailModal.value = false;
+  showEditModal.value = true;
+}
+
+// 关闭编辑弹窗
+function closeEditModal() {
+  showEditModal.value = false;
+  editForm.value = {
+    name: '',
+    positive: '',
+    negative: '',
+  };
+}
+
+// 处理图片选择
+function handleImageSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    editForm.value.imageFile = input.files[0];
   }
-  
-  isEditing.value = false
-  editingPrompt.value = null
 }
 
-function cancelEdit() {
-  isEditing.value = false
-  editingPrompt.value = null
+// 保存提示词
+async function savePrompt() {
+  const form = editForm.value;
+
+  let thumbnailData = form.thumbnailData;
+  let previewData = form.previewData;
+
+  // 如果有新选择的图片，压缩处理
+  if (form.imageFile) {
+    try {
+      console.log('[PromptManager] 开始压缩图片:', form.imageFile.name);
+      const compressed = await compressImage(form.imageFile);
+      thumbnailData = compressed.thumbnailData;
+      previewData = compressed.previewData;
+      console.log('[PromptManager] 图片压缩完成:', {
+        thumbnailLength: thumbnailData?.length,
+        previewLength: previewData?.length,
+        thumbnailPreview: thumbnailData?.substring(0, 50) + '...',
+      });
+    } catch (error) {
+      console.error('[PromptManager] 图片压缩失败:', error);
+      alert('图片压缩失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      return;
+    }
+  }
+
+  console.log('[PromptManager] 保存提示词:', {
+    isCreating: isCreating.value,
+    hasThumbnail: !!thumbnailData,
+    thumbnailLength: thumbnailData?.length,
+  });
+
+  if (isCreating.value) {
+    // 创建新提示词
+    const newPrompt = await promptStore.createPrompt({
+      name: form.name,
+      positive: form.positive,
+      negative: form.negative,
+      thumbnailData,
+      previewData,
+    });
+    console.log('[PromptManager] 新提示词已创建:', {
+      id: newPrompt.id,
+      hasThumbnail: !!newPrompt.thumbnailData,
+    });
+  } else if (form.id) {
+    // 更新现有提示词
+    await promptStore.updatePrompt(form.id, {
+      name: form.name,
+      positive: form.positive,
+      negative: form.negative,
+      thumbnailData,
+      previewData,
+    });
+    console.log('[PromptManager] 提示词已更新');
+  }
+
+  closeEditModal();
 }
 
+// 删除提示词
 async function deletePrompt(id: string) {
   if (confirm('确定要删除这个提示词吗？')) {
-    await promptStore.deletePrompt(id)
-    if (editingPrompt.value?.id === id) {
-      cancelEdit()
+    await promptStore.deletePrompt(id);
+    if (selectedPrompt.value?.id === id) {
+      closeDetailModal();
+    }
+    if (showEditModal.value && editForm.value.id === id) {
+      closeEditModal();
     }
   }
 }
 
-function copyPrompt(prompt: PromptRecord, type: 'positive' | 'negative' | 'full') {
-  let text = ''
-  if (type === 'positive') text = prompt.positive
-  else if (type === 'negative') text = prompt.negative
-  else text = `正向: ${prompt.positive}\n负向: ${prompt.negative}`
-  
-  navigator.clipboard.writeText(text)
+// 格式化日期
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('zh-CN');
 }
 
-function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('zh-CN')
+// 处理复制事件
+function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
+  console.log(`已复制 ${type}:`, text.substring(0, 50) + '...');
 }
 </script>
 
 <template>
-  <div class="h-full flex">
-    <!-- Sidebar - Prompt List -->
-    <div class="w-80 bg-card border-r border-border flex flex-col">
-      <!-- Header -->
-      <div class="p-4 border-b border-border">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-bold text-foreground">提示词列表</h2>
-          <button
-            @click="createNewPrompt"
-            class="w-8 h-8 flex items-center justify-center text-white rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
-            style="background: linear-gradient(135deg, #3498db 0%, #5dade2 100%); box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);"
-          >
-            <Plus class="w-4 h-4" />
-          </button>
-        </div>
+  <div class="h-full flex flex-col">
+    <!-- Header -->
+    <div
+      class="flex items-center justify-between px-6 py-4 border-b border-border bg-card/50"
+    >
+      <div class="flex items-center gap-3">
+        <h2 class="text-lg font-bold text-foreground">提示词管理</h2>
+        <span class="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-lg">
+          {{ filteredPrompts.length }} 个提示词
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- 搜索框 -->
         <div class="relative">
-          <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+          />
           <input
             v-model="searchQuery"
             type="text"
             placeholder="搜索提示词..."
-            class="input-field pl-10 text-sm"
+            class="input-field pl-10 text-sm w-64"
           />
         </div>
-      </div>
 
-      <!-- List -->
-      <div class="flex-1 overflow-y-auto scrollbar-thin p-2 space-y-1">
-        <div
-          v-for="prompt in filteredPrompts"
-          :key="prompt.id"
-          @click="editPrompt(prompt)"
-          :class="[
-            'p-3 rounded-xl cursor-pointer transition-all duration-200 group',
-            editingPrompt?.id === prompt.id
-              ? 'border shadow-sm'
-              : 'hover:bg-muted border border-transparent'
-          ]"
-          :style="editingPrompt?.id === prompt.id ? 'background: linear-gradient(135deg, rgba(52,152,219,0.08) 0%, rgba(243,104,224,0.04) 100%); border-color: rgba(52,152,219,0.2);' : ''"
+        <!-- 新建按钮 -->
+        <button
+          @click="openCreateModal"
+          class="btn-primary text-sm flex items-center gap-2"
         >
-          <div class="flex items-start justify-between mb-1.5">
-            <h3 class="font-semibold text-foreground truncate flex-1 text-sm">{{ prompt.name }}</h3>
-            <button
-              @click.stop="deletePrompt(prompt.id)"
-              class="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-[#ef4444] opacity-0 group-hover:opacity-100 transition-opacity rounded-md hover:bg-[rgba(239,68,68,0.08)]"
-            >
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <p class="text-xs text-muted-foreground line-clamp-2 mb-2 leading-relaxed">
-            {{ prompt.positive || '无正向提示词' }}
-          </p>
-          <div class="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{{ formatDate(prompt.updatedAt) }}</span>
-            <span v-if="prompt.source === 'parsed'" class="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]">
-              解析
-            </span>
-          </div>
-        </div>
-
-        <div v-if="filteredPrompts.length === 0" class="text-center py-10">
-          <div class="w-12 h-12 rounded-xl bg-[rgba(52,152,219,0.06)] flex items-center justify-center mx-auto mb-3">
-            <FileText class="w-6 h-6 text-[#3498db]/40" />
-          </div>
-          <p class="text-sm text-muted-foreground font-medium">暂无提示词</p>
-          <button
-            @click="createNewPrompt"
-            class="text-[#3498db] hover:text-[#2980b9] text-sm mt-2 font-medium transition-colors"
-          >
-            创建新的提示词
-          </button>
-        </div>
+          <Plus class="w-4 h-4" />
+          新建提示词
+        </button>
       </div>
     </div>
 
-    <!-- Main - Editor -->
-    <div class="flex-1 flex flex-col p-6 overflow-hidden">
-      <div v-if="!isEditing" class="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-        <div class="w-20 h-20 rounded-2xl bg-[rgba(52,152,219,0.06)] flex items-center justify-center mb-5">
-          <PenLine class="w-10 h-10 text-[#3498db]/30" />
+    <!-- 卡片网格 -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <!-- 空状态 -->
+      <div
+        v-if="filteredPrompts.length === 0"
+        class="h-full flex flex-col items-center justify-center text-muted-foreground"
+      >
+        <div
+          class="w-20 h-20 rounded-2xl bg-[rgba(52,152,219,0.06)] flex items-center justify-center mb-5"
+        >
+          <FileText class="w-10 h-10 text-[#3498db]/30" />
         </div>
-        <p class="font-medium">选择左侧提示词进行编辑，或创建新的提示词</p>
+        <p class="font-medium">
+          {{ searchQuery ? '未找到匹配的提示词' : '暂无提示词' }}
+        </p>
         <button
-          @click="createNewPrompt"
+          v-if="!searchQuery"
+          @click="openCreateModal"
           class="btn-primary mt-5 flex items-center gap-2"
         >
           <Plus class="w-4 h-4" />
@@ -179,92 +266,304 @@ function formatDate(timestamp: number): string {
         </button>
       </div>
 
-      <template v-else-if="editingPrompt">
-        <!-- Editor Header -->
-        <div class="flex items-center justify-between mb-5">
-          <input
-            v-model="editingPrompt.name"
-            type="text"
-            class="text-xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground flex-1 mr-4"
-            placeholder="输入提示词名称..."
-          />
-          <div class="flex gap-2">
-            <button
-              @click="cancelEdit"
-              class="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+      <!-- 网格布局 -->
+      <div
+        v-else
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+      >
+        <div
+          v-for="prompt in filteredPrompts"
+          :key="prompt.id"
+          @click="openDetailModal(prompt)"
+          class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]"
+        >
+          <!-- 图片区域 -->
+          <div
+            class="aspect-square bg-muted/50 relative overflow-hidden"
+          >
+            <img
+              v-if="prompt.previewData"
+              :src="prompt.previewData"
+              :alt="prompt.name"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div
+              v-else
+              class="w-full h-full flex items-center justify-center"
             >
-              取消
-            </button>
-            <button
-              @click="savePrompt"
-              class="btn-primary text-sm flex items-center gap-2"
-            >
-              <Save class="w-4 h-4" />
-              保存
-            </button>
-          </div>
-        </div>
+              <div
+                class="w-16 h-16 rounded-2xl bg-[rgba(52,152,219,0.08)] flex items-center justify-center"
+              >
+                <ImageIcon class="w-8 h-8 text-[#3498db]/40" />
+              </div>
+            </div>
 
-        <!-- Positive Prompt -->
-        <div class="mb-5">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-bold text-[#22c55e] flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-[#22c55e]"></span>
-              正向提示词
-            </label>
-            <button
-              @click="copyPrompt(editingPrompt, 'positive')"
-              class="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            <!-- Hover 遮罩层 -->
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             >
-              <Copy class="w-4 h-4" />
-            </button>
+              <div class="absolute bottom-3 left-3 right-3 flex gap-2">
+                <button
+                  @click.stop="openEditModal(prompt)"
+                  class="flex-1 py-1.5 bg-white/90 text-foreground text-xs font-medium rounded-lg hover:bg-white transition-colors flex items-center justify-center gap-1"
+                >
+                  <Edit3 class="w-3 h-3" />
+                  编辑
+                </button>
+                <button
+                  @click.stop="deletePrompt(prompt.id)"
+                  class="w-8 h-7 bg-white/90 text-red-500 rounded-lg hover:bg-white transition-colors flex items-center justify-center"
+                >
+                  <Trash2 class="w-3 h-3" />
+                </button>
+              </div>
+            </div>
           </div>
-          <textarea
-            v-model="editingPrompt.positive"
-            rows="5"
-            class="input-field resize-none font-mono text-sm leading-relaxed"
-            placeholder="输入正向提示词..."
-          ></textarea>
-        </div>
 
-        <!-- Negative Prompt -->
-        <div class="mb-5">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-bold text-[#ef4444] flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-[#ef4444]"></span>
-              负向提示词
-            </label>
-            <button
-              @click="copyPrompt(editingPrompt, 'negative')"
-              class="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+          <!-- 信息区域 -->
+          <div class="p-3">
+            <h3
+              class="font-semibold text-foreground text-sm truncate mb-1.5"
+              :title="prompt.name"
             >
-              <Copy class="w-4 h-4" />
-            </button>
-          </div>
-          <textarea
-            v-model="editingPrompt.negative"
-            rows="4"
-            class="input-field resize-none font-mono text-sm leading-relaxed"
-            placeholder="输入负向提示词..."
-          ></textarea>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="mt-auto pt-4 border-t border-border">
-          <div class="flex items-center justify-between">
-            <span class="text-xs text-muted-foreground">
-              创建时间: {{ formatDate(editingPrompt.createdAt) }}
-            </span>
-            <button
-              @click="copyPrompt(editingPrompt, 'full')"
-              class="btn-secondary text-sm flex items-center gap-2"
-            >
-              <Copy class="w-4 h-4" />
-              复制全部
-            </button>
+              {{ prompt.name }}
+            </h3>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted-foreground">
+                {{ formatDate(prompt.updatedAt) }}
+              </span>
+              <span
+                v-if="prompt.source === 'parsed'"
+                class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]"
+              >
+                解析
+              </span>
+              <span
+                v-else
+                class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-muted-foreground bg-muted"
+              >
+                手动
+              </span>
+            </div>
           </div>
         </div>
-      </template>
+      </div>
     </div>
+
+    <!-- 详情弹窗 -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showDetailModal && selectedPrompt"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          @click.self="closeDetailModal"
+        >
+          <div
+            class="w-full max-w-4xl max-h-[90vh] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col"
+          >
+            <!-- 弹窗头部 -->
+            <div
+              class="flex items-center justify-between px-6 py-4 border-b border-border"
+            >
+              <div class="flex items-center gap-3">
+                <h2 class="text-lg font-bold text-foreground">
+                  {{ selectedPrompt.name }}
+                </h2>
+                <span
+                  v-if="selectedPrompt.source === 'parsed'"
+                  class="px-2 py-0.5 rounded-lg text-xs font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]"
+                >
+                  解析导入
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="openEditModal(selectedPrompt)"
+                  class="btn-secondary text-sm flex items-center gap-2"
+                >
+                  <Edit3 class="w-4 h-4" />
+                  编辑
+                </button>
+                <button
+                  @click="deletePrompt(selectedPrompt.id)"
+                  class="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
+                >
+                  <Trash2 class="w-4 h-4" />
+                </button>
+                <button
+                  @click="closeDetailModal"
+                  class="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors"
+                >
+                  <X class="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <!-- 弹窗内容 -->
+            <div class="flex-1 overflow-hidden">
+              <PromptDetailViewer
+                :name="selectedPrompt.name"
+                :positive="selectedPrompt.positive"
+                :negative="selectedPrompt.negative"
+                :preview-data="selectedPrompt.previewData"
+                :show-image="true"
+                :show-actions="true"
+                @copy="handleCopy"
+              />
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- 编辑/新建弹窗 -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showEditModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          @click.self="closeEditModal"
+        >
+          <div
+            class="w-full max-w-2xl max-h-[90vh] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col"
+          >
+            <!-- 弹窗头部 -->
+            <div
+              class="flex items-center justify-between px-6 py-4 border-b border-border"
+            >
+              <h2 class="text-lg font-bold text-foreground">
+                {{ isCreating ? '新建提示词' : '编辑提示词' }}
+              </h2>
+              <button
+                @click="closeEditModal"
+                class="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors"
+              >
+                <X class="w-5 h-5" />
+              </button>
+            </div>
+
+            <!-- 表单内容 -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-5">
+              <!-- 名称 -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-2">
+                  提示词名称
+                </label>
+                <input
+                  v-model="editForm.name"
+                  type="text"
+                  class="input-field"
+                  placeholder="输入提示词名称..."
+                />
+              </div>
+
+              <!-- 图片上传 -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-2">
+                  预览图片
+                </label>
+                <div class="flex items-center gap-4">
+                  <div
+                    v-if="editForm.previewData || editForm.imageFile"
+                    class="w-24 h-24 rounded-lg overflow-hidden border border-border"
+                  >
+                    <img
+                      v-if="editForm.imageFile"
+                      :src="URL.createObjectURL(editForm.imageFile)"
+                      class="w-full h-full object-cover"
+                    />
+                    <img
+                      v-else-if="editForm.previewData"
+                      :src="editForm.previewData"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div class="flex-1">
+                    <label
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-xl cursor-pointer transition-colors"
+                    >
+                      <ImageIcon class="w-4 h-4" />
+                      <span class="text-sm">
+                        {{ editForm.previewData || editForm.imageFile ? '更换图片' : '选择图片' }}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="handleImageSelect"
+                      />
+                    </label>
+                    <p class="text-xs text-muted-foreground mt-2">
+                      支持 PNG、JPG、WebP 格式，图片将被压缩后存储
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 正向提示词 -->
+              <div>
+                <label
+                  class="block text-sm font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-1.5"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  正向提示词
+                </label>
+                <textarea
+                  v-model="editForm.positive"
+                  rows="5"
+                  class="input-field resize-none font-mono text-sm leading-relaxed"
+                  placeholder="输入正向提示词..."
+                ></textarea>
+              </div>
+
+              <!-- 负向提示词 -->
+              <div>
+                <label
+                  class="block text-sm font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1.5"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                  负向提示词
+                </label>
+                <textarea
+                  v-model="editForm.negative"
+                  rows="4"
+                  class="input-field resize-none font-mono text-sm leading-relaxed"
+                  placeholder="输入负向提示词..."
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- 底部按钮 -->
+            <div
+              class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border"
+            >
+              <button
+                @click="closeEditModal"
+                class="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              >
+                取消
+              </button>
+              <button @click="savePrompt" class="btn-primary text-sm">
+                {{ isCreating ? '创建' : '保存' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

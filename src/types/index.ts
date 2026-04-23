@@ -41,6 +41,10 @@ export interface PromptRecord {
   negative: string;
   tags: TagWithWeight[];
   source: 'manual' | 'parsed';
+  /** Base64缩略图数据(120x120)，用于卡片展示 */
+  thumbnailData?: string;
+  /** Base64预览图数据(短边>900时缩放到900px)，用于弹窗大图展示 */
+  previewData?: string;
   createdAt: number;
   updatedAt: number;
 }

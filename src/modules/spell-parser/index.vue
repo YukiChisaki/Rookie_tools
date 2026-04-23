@@ -57,11 +57,27 @@ async function handleImportToPrompts() {
   const image = spellStore.currentImage;
   const name = image.fileName.replace(/\.[^/.]+$/, '') || '解析的提示词';
 
-  await promptStore.importFromMetadata(
+  console.log('[SpellParser] 导入到提示词管理:', {
+    name,
+    hasThumbnailData: !!image.thumbnailData,
+    hasPreviewData: !!image.previewData,
+    thumbnailDataLength: image.thumbnailData?.length,
+    thumbnailPreview: image.thumbnailData?.substring(0, 50) + '...',
+  });
+
+  // 传递图片数据到提示词管理
+  const newPrompt = await promptStore.importFromMetadata(
     name,
     image.positivePrompt,
-    image.negativePrompt
+    image.negativePrompt,
+    image.thumbnailData,
+    image.previewData
   );
+
+  console.log('[SpellParser] 已导入到提示词管理:', {
+    id: newPrompt.id,
+    hasThumbnail: !!newPrompt.thumbnailData,
+  });
 
   // 显示成功提示
   showToast('已导入到提示词管理');

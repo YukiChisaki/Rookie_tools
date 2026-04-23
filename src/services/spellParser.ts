@@ -626,7 +626,11 @@ export async function parseImage(file: File): Promise<ParseResult> {
       const compressed = await compressImage(file);
       thumbnailData = compressed.thumbnailData;
       previewData = compressed.previewData;
-      console.log('[SpellParser] 图片压缩完成');
+      console.log('[SpellParser] 图片压缩完成:', {
+        thumbnailLength: thumbnailData?.length,
+        previewLength: previewData?.length,
+        thumbnailPreview: thumbnailData?.substring(0, 50) + '...',
+      });
     } catch (compressError) {
       console.error('[SpellParser] 图片压缩失败，使用原图:', compressError);
       // 如果压缩失败，使用原图的 Data URL
@@ -638,6 +642,9 @@ export async function parseImage(file: File): Promise<ParseResult> {
       });
       thumbnailData = originalDataUrl;
       previewData = originalDataUrl;
+      console.log('[SpellParser] 使用原图 Data URL:', {
+        dataUrlLength: originalDataUrl?.length,
+      });
     }
 
     // 构建解析结果
@@ -660,6 +667,11 @@ export async function parseImage(file: File): Promise<ParseResult> {
     console.log('[SpellParser] 正向提示词长度:', result.positivePrompt.length);
     console.log('[SpellParser] 反向提示词长度:', result.negativePrompt.length);
     console.log('[SpellParser] 提取的参数:', result.parameters);
+    console.log('[SpellParser] 缩略图数据:', {
+      hasThumbnail: !!result.thumbnailData,
+      thumbnailLength: result.thumbnailData?.length,
+      thumbnailPreview: result.thumbnailData?.substring(0, 50) + '...',
+    });
     console.log('[SpellParser] ===== 解析完成 =====');
     console.log('========================================');
 
