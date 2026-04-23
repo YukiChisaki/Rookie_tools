@@ -8,6 +8,7 @@ import {
   Trash2,
   ImageIcon,
   Copy,
+  Archive,
 } from 'lucide-vue-next';
 import { MasonryWall } from '@yeger/vue-masonry-wall';
 import { useDialog, useMessage } from 'naive-ui';
@@ -117,12 +118,20 @@ function closeEditModal() {
 }
 
 // 处理图片选择
-function handleImageSelect(data: { fileList: { file: File }[] }) {
-  const file = data.fileList[0]?.file;
-  if (file) {
+function handleImageSelect(data: any) {
+  const file = data?.file?.file || data?.fileList?.[0]?.file;
+  if (file instanceof File) {
     editForm.value.imageFile = file;
   }
 }
+
+// 图片预览URL
+const previewImageUrl = computed(() => {
+  if (editForm.value.imageFile) {
+    return URL.createObjectURL(editForm.value.imageFile);
+  }
+  return editForm.value.previewData || '';
+});
 
 // 保存提示词
 async function savePrompt() {
@@ -348,13 +357,13 @@ async function copyFullPrompt() {
       </div>
     </n-modal>
 
-    <!-- 编辑/新建弹窗 -->
-    <n-modal v-model:show="showEditModal" preset="card" style="width: 672px; max-width: 95vw" :mask-closable="false"
+    <!-- 新建弹窗 -->
+    <n-modal v-model:show="showEditModal" preset="card" style="width: 800px; max-width: 95vw" :mask-closable="false"
       :closable="false" class="prompt-edit-modal">
       <template #header>
         <div class="flex items-center justify-between w-full">
           <h2 class="text-lg font-bold text-foreground">
-            {{ isCreating ? '新建提示词' : '编辑提示词' }}
+            新建提示词
           </h2>
           <n-button quaternary circle size="small" @click="closeEditModal">
             <template #icon>
@@ -364,62 +373,47 @@ async function copyFullPrompt() {
         </div>
       </template>
 
-      <!-- 表单内容 -->
-      <div class="max-h-[60vh] overflow-y-auto p-2 space-y-5">
-        <!-- 名称 -->
-        <div>
-          <label class="block text-sm font-medium text-foreground mb-2">
-            提示词名称
-          </label>
-          <n-input v-model:value="editForm.name" placeholder="输入提示词名称..." />
+      <div class="flex gap-6">
+        <!-- 左侧: 图片上传区域 -->
+        <div class="flex-shrink-0 w-[280px]">
+
         </div>
 
-        <!-- 图片上传 -->
-        <div>
-          <label class="block text-sm font-medium text-foreground mb-2">
-            预览图片
-          </label>
-          <div class="flex items-center gap-4">
-            <div v-if="editForm.previewData || editForm.imageFile"
-              class="w-24 h-24 rounded-lg overflow-hidden border border-border">
-              <img v-if="editForm.imageFile" :src="URL.createObjectURL(editForm.imageFile)"
-                class="w-full h-full object-cover" />
-              <img v-else-if="editForm.previewData" :src="editForm.previewData" class="w-full h-full object-cover" />
+        <!-- 右侧: 表单内容 -->
+        <div class="flex-1 min-w-0 max-h-[60vh] overflow-y-auto pr-1 space-y-5">
+          <!-- 名称 -->
+          <div>
+            <label class="block text-sm font-medium text-foreground mb-2">
+              提示词名称
+            </label>
+            <n-input v-model:value="editForm.name" placeholder="输入提示词名称..." />
+          </div>
+
+
+          <!-- 正向提示词 -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                正向提示词
+              </label>
             </div>
-            <div class="flex-1">
-              <n-upload accept="image/*" :show-file-list="false" @change="handleImageSelect">
-                <n-button>
-                  <template #icon>
-                    <ImageIcon class="w-4 h-4" />
-                  </template>
-                  {{ editForm.previewData || editForm.imageFile ? '更换图片' : '选择图片' }}
-                </n-button>
-              </n-upload>
-              <p class="text-xs text-muted-foreground mt-2">
-                支持 PNG、JPG、WebP 格式，图片将被压缩后存储
-              </p>
+            <n-input v-model:value="editForm.positive" type="textarea" :rows="5" placeholder="输入正向提示词..." />
+          </div>
+
+          <!-- 负向提示词 -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                负向提示词
+              </label>
             </div>
+            <n-input v-model:value="editForm.negative" type="textarea" :rows="4" placeholder="输入负向提示词..." />
           </div>
         </div>
-
-        <!-- 正向提示词 -->
-        <div>
-          <label class="text-sm font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-            正向提示词
-          </label>
-          <n-input v-model:value="editForm.positive" type="textarea" :rows="5" placeholder="输入正向提示词..." />
-        </div>
-
-        <!-- 负向提示词 -->
-        <div>
-          <label class="text-sm font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-            负向提示词
-          </label>
-          <n-input v-model:value="editForm.negative" type="textarea" :rows="4" placeholder="输入负向提示词..." />
-        </div>
       </div>
+
 
       <template #footer>
         <div class="flex items-center justify-between w-full">
@@ -435,7 +429,7 @@ async function copyFullPrompt() {
               取消
             </n-button>
             <n-button type="primary" @click="savePrompt">
-              {{ isCreating ? '创建' : '保存' }}
+              创建
             </n-button>
           </div>
         </div>
