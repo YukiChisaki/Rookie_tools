@@ -9,6 +9,7 @@ import {
   Edit3,
   ImageIcon,
 } from 'lucide-vue-next';
+import { MasonryWall } from '@yeger/vue-masonry-wall';
 import { usePromptStore } from '../../stores/prompt';
 import type { PromptRecord } from '../../types';
 import PromptDetailViewer from '../../components/PromptDetailViewer.vue';
@@ -266,88 +267,89 @@ function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
         </button>
       </div>
 
-      <!-- 网格布局 -->
-      <div
+      <!-- 瀑布流布局 -->
+      <MasonryWall
         v-else
-        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+        :items="filteredPrompts"
+        :column-width="220"
+        :gap="16"
+        :ssr-columns="1"
       >
-        <div
-          v-for="prompt in filteredPrompts"
-          :key="prompt.id"
-          @click="openDetailModal(prompt)"
-          class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]"
-        >
-          <!-- 图片区域 -->
+        <template #default="{ item: prompt }">
           <div
-            class="aspect-square bg-muted/50 relative overflow-hidden"
+            @click="openDetailModal(prompt)"
+            class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]"
           >
-            <img
-              v-if="prompt.previewData"
-              :src="prompt.previewData"
-              :alt="prompt.name"
-              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div
-              v-else
-              class="w-full h-full flex items-center justify-center"
-            >
+            <!-- 图片区域 -->
+            <div class="bg-muted/50 relative overflow-hidden">
+              <img
+                v-if="prompt.previewData"
+                :src="prompt.previewData"
+                :alt="prompt.name"
+                class="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+              />
               <div
-                class="w-16 h-16 rounded-2xl bg-[rgba(52,152,219,0.08)] flex items-center justify-center"
-              >
-                <ImageIcon class="w-8 h-8 text-[#3498db]/40" />
-              </div>
-            </div>
-
-            <!-- Hover 遮罩层 -->
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            >
-              <div class="absolute bottom-3 left-3 right-3 flex gap-2">
-                <button
-                  @click.stop="openEditModal(prompt)"
-                  class="flex-1 py-1.5 bg-white/90 text-foreground text-xs font-medium rounded-lg hover:bg-white transition-colors flex items-center justify-center gap-1"
-                >
-                  <Edit3 class="w-3 h-3" />
-                  编辑
-                </button>
-                <button
-                  @click.stop="deletePrompt(prompt.id)"
-                  class="w-8 h-7 bg-white/90 text-red-500 rounded-lg hover:bg-white transition-colors flex items-center justify-center"
-                >
-                  <Trash2 class="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 信息区域 -->
-          <div class="p-3">
-            <h3
-              class="font-semibold text-foreground text-sm truncate mb-1.5"
-              :title="prompt.name"
-            >
-              {{ prompt.name }}
-            </h3>
-            <div class="flex items-center justify-between">
-              <span class="text-xs text-muted-foreground">
-                {{ formatDate(prompt.updatedAt) }}
-              </span>
-              <span
-                v-if="prompt.source === 'parsed'"
-                class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]"
-              >
-                解析
-              </span>
-              <span
                 v-else
-                class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-muted-foreground bg-muted"
+                class="aspect-square flex items-center justify-center"
               >
-                手动
-              </span>
+                <div
+                  class="w-16 h-16 rounded-2xl bg-[rgba(52,152,219,0.08)] flex items-center justify-center"
+                >
+                  <ImageIcon class="w-8 h-8 text-[#3498db]/40" />
+                </div>
+              </div>
+
+              <!-- Hover 遮罩层 -->
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              >
+                <div class="absolute bottom-3 left-3 right-3 flex gap-2">
+                  <button
+                    @click.stop="openEditModal(prompt)"
+                    class="flex-1 py-1.5 bg-white/90 text-foreground text-xs font-medium rounded-lg hover:bg-white transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Edit3 class="w-3 h-3" />
+                    编辑
+                  </button>
+                  <button
+                    @click.stop="deletePrompt(prompt.id)"
+                    class="w-8 h-7 bg-white/90 text-red-500 rounded-lg hover:bg-white transition-colors flex items-center justify-center"
+                  >
+                    <Trash2 class="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 信息区域 -->
+            <div class="p-3">
+              <h3
+                class="font-semibold text-foreground text-sm truncate mb-1.5"
+                :title="prompt.name"
+              >
+                {{ prompt.name }}
+              </h3>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-muted-foreground">
+                  {{ formatDate(prompt.updatedAt) }}
+                </span>
+                <span
+                  v-if="prompt.source === 'parsed'"
+                  class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-[#3498db] bg-[rgba(52,152,219,0.1)]"
+                >
+                  解析
+                </span>
+                <span
+                  v-else
+                  class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-muted-foreground bg-muted"
+                >
+                  手动
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </MasonryWall>
     </div>
 
     <!-- 详情弹窗 -->

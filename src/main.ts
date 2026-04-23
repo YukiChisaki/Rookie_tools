@@ -9,7 +9,10 @@ async function init() {
   await db.init()
   
   const app = createApp(App)
+  
+  // 使用 Pinia
   app.use(createPinia())
+  
   app.mount('#app')
 }
 

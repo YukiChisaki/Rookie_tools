@@ -8,11 +8,14 @@ import {
   Moon,
   Sparkles
 } from 'lucide-vue-next'
+import { darkTheme } from 'naive-ui'
+import type { GlobalTheme } from 'naive-ui'
 import { useTagStore } from './stores/tag'
 import { usePromptStore } from './stores/prompt'
 import { useArtistStore } from './stores/artist'
 import { useTagLoader } from './composables/useTagLoader'
 import { useArtistLoader } from './composables/useArtistLoader'
+import { themeOverrides, darkThemeOverrides } from './styles/naiveTheme'
 import type { ModuleType } from './types'
 
 // Modules
@@ -38,6 +41,10 @@ const artistStore = useArtistStore()
 const isDark = ref(false)
 
 const themeIcon = computed(() => isDark.value ? Sun : Moon)
+
+// Naive UI 主题
+const naiveTheme = computed<GlobalTheme | null>(() => isDark.value ? darkTheme : null)
+const currentThemeOverrides = computed(() => isDark.value ? darkThemeOverrides : themeOverrides)
 
 function toggleTheme() {
   isDark.value = !isDark.value
@@ -72,6 +79,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <n-config-provider :theme="naiveTheme" :theme-overrides="currentThemeOverrides">
   <div class="h-screen w-screen bg-background flex flex-col overflow-hidden">
     <!-- Top Header Bar -->
     <header class="h-[64px] bg-card border-b border-border flex items-center justify-between px-6 shrink-0">
@@ -126,6 +134,7 @@ onMounted(async () => {
       </main>
     </div>
   </div>
+  </n-config-provider>
 </template>
 
 <style scoped>
