@@ -61,47 +61,34 @@ async function copyFull() {
 </script>
 
 <template>
-  <div class="h-full flex flex-col overflow-hidden">
+  <div class="h-full min-h-[800px] flex flex-col overflow-y-auto">
     <!-- 内容区 -->
     <div class="flex-1 overflow-y-auto p-6">
       <div class="w-full space-y-6">
         <!-- 图片和信息 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- 图片预览 -->
-          <div
-            v-if="showImage && previewData"
-            class="h-full bg-card border border-border rounded-xl w-full flex flex-col min-h-0 max-h-[500px]"
-          >
+          <div v-if="showImage && previewData"
+            class="h-full bg-card border border-border rounded-xl w-full flex flex-col min-h-0 max-h-[700px]">
             <div class="rounded-lg overflow-hidden flex-1 flex items-center justify-center min-h-0 p-4">
-              <img
-                :src="previewData"
-                :alt="name"
-                class="max-w-full max-h-full object-contain rounded-lg"
-              />
+              <img :src="previewData" :alt="name" class="max-w-full max-h-full object-contain rounded-lg" />
             </div>
           </div>
 
           <!-- 参数信息和提示词 -->
           <div class="space-y-4" :class="showImage && previewData ? '' : 'lg:col-span-2'">
             <!-- 生成参数 -->
-            <div
-              v-if="Object.keys(parameters).length > 0"
-              class="p-4 rounded-xl border bg-card/50"
-              style="border-color: rgba(52, 152, 219, 0.15)"
-            >
+            <div v-if="Object.keys(parameters).length > 0" class="p-4 rounded-xl border bg-card/50"
+              style="border-color: rgba(52, 152, 219, 0.15)">
               <h3 class="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <span
-                  class="w-1.5 h-1.5 rounded-full"
-                  style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%)"
-                ></span>
+                <span class="w-1.5 h-1.5 rounded-full"
+                  style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%)"></span>
                 核心参数
               </h3>
 
               <!-- 模型 - 单独一行 -->
-              <div
-                v-if="parameters.model"
-                class="flex items-center justify-between p-3 mb-2 bg-card rounded-lg border border-border/50"
-              >
+              <div v-if="parameters.model"
+                class="flex items-center justify-between p-3 mb-2 bg-card rounded-lg border border-border/50">
                 <div class="flex items-center gap-3">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Box class="w-3.5 h-3.5" />
@@ -111,11 +98,8 @@ async function copyFull() {
                     {{ formatParameter('model', parameters.model) }}
                   </span>
                 </div>
-                <a
-                  :href="`https://civitai.com/search/models?query=${encodeURIComponent(parameters.model?.split('.')[0] || '')}`"
-                  target="_blank"
-                  class="text-xs text-blue-500 hover:text-blue-400 transition-colors"
-                >
+                <a :href="`https://civitai.com/search/models?query=${encodeURIComponent(parameters.model?.split('.')[0] || '')}`"
+                  target="_blank" class="text-xs text-blue-500 hover:text-blue-400 transition-colors">
                   查找模型
                 </a>
               </div>
@@ -123,10 +107,8 @@ async function copyFull() {
               <!-- 其他参数网格 -->
               <div class="grid grid-cols-3 gap-2">
                 <!-- 采样器 -->
-                <div
-                  v-if="parameters.sampler"
-                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50"
-                >
+                <div v-if="parameters.sampler"
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Sliders class="w-3.5 h-3.5" />
                     采样器
@@ -137,10 +119,8 @@ async function copyFull() {
                 </div>
 
                 <!-- 调度器 -->
-                <div
-                  v-if="parameters.schedule || parameters.scheduler"
-                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50"
-                >
+                <div v-if="parameters.schedule || parameters.scheduler"
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Sliders class="w-3.5 h-3.5" />
                     调度器
@@ -151,10 +131,8 @@ async function copyFull() {
                 </div>
 
                 <!-- 步数 -->
-                <div
-                  v-if="parameters.steps"
-                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50"
-                >
+                <div v-if="parameters.steps"
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Sparkles class="w-3.5 h-3.5" />
                     步数
@@ -165,10 +143,8 @@ async function copyFull() {
                 </div>
 
                 <!-- CFG -->
-                <div
-                  v-if="parameters.cfg"
-                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50"
-                >
+                <div v-if="parameters.cfg"
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Sliders class="w-3.5 h-3.5" />
                     CFG
@@ -179,10 +155,8 @@ async function copyFull() {
                 </div>
 
                 <!-- 种子 -->
-                <div
-                  v-if="parameters.seed"
-                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50"
-                >
+                <div v-if="parameters.seed"
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5">
                     <AlertCircle class="w-3.5 h-3.5" />
                     种子
@@ -193,10 +167,8 @@ async function copyFull() {
                 </div>
 
                 <!-- 尺寸 -->
-                <div
-                  v-if="parameters.width && parameters.height"
-                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50"
-                >
+                <div v-if="parameters.width && parameters.height"
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Ruler class="w-3.5 h-3.5" />
                     尺寸
@@ -215,11 +187,8 @@ async function copyFull() {
                   <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                   正向提示词
                 </label>
-                <button
-                  v-if="showActions"
-                  @click="copyPositive"
-                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 dark:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors"
-                >
+                <button v-if="showActions" @click="copyPositive"
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 dark:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors">
                   <Check v-if="copiedPositive" class="w-3.5 h-3.5" />
                   <Copy v-else class="w-3.5 h-3.5" />
                   {{ copiedPositive ? '已复制' : '复制' }}
@@ -239,11 +208,8 @@ async function copyFull() {
                   <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                   负向提示词
                 </label>
-                <button
-                  v-if="showActions"
-                  @click="copyNegative"
-                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                >
+                <button v-if="showActions" @click="copyNegative"
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
                   <Check v-if="copiedNegative" class="w-3.5 h-3.5" />
                   <Copy v-else class="w-3.5 h-3.5" />
                   {{ copiedNegative ? '已复制' : '复制' }}
@@ -260,11 +226,8 @@ async function copyFull() {
 
         <!-- 底部操作栏 -->
         <div v-if="showActions" class="flex items-center justify-end gap-3 pt-4 border-t border-border">
-          <button
-            v-if="showDelete"
-            @click="$emit('delete')"
-            class="text-sm flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
-          >
+          <button v-if="showDelete" @click="$emit('delete')"
+            class="text-sm flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors">
             <Trash2 class="w-4 h-4" />
             删除
           </button>

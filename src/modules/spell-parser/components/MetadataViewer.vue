@@ -40,35 +40,24 @@ function isObject(value: unknown): value is Record<string, unknown> {
 <template>
   <div class="mt-6 border border-border rounded-xl overflow-hidden bg-card">
     <!-- 头部 -->
-    <button
-      @click="toggleExpand"
-      class="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
-    >
+    <button @click="toggleExpand"
+      class="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
       <div class="flex items-center gap-2">
         <span class="font-semibold text-foreground">完整元数据</span>
         <span class="text-xs text-muted-foreground">(JSON)</span>
       </div>
       <div class="flex items-center gap-2">
-        <button
-          @click.stop="copyMetadata"
-          class="p-1.5 rounded-lg hover:bg-muted transition-colors"
-          title="复制 JSON"
-        >
+        <button @click.stop="copyMetadata" class="p-1.5 rounded-lg hover:bg-muted transition-colors" title="复制 JSON">
           <Check v-if="copied" class="w-4 h-4 text-green-500" />
           <Copy v-else class="w-4 h-4 text-muted-foreground" />
         </button>
-        <ChevronDown
-          class="w-5 h-5 text-muted-foreground transition-transform duration-200"
-          :class="isExpanded ? 'rotate-180' : ''"
-        />
+        <ChevronDown class="w-5 h-5 text-muted-foreground transition-transform duration-200"
+          :class="isExpanded ? 'rotate-180' : ''" />
       </div>
     </button>
 
     <!-- 内容 -->
-    <div
-      v-show="isExpanded"
-      class="border-t border-border bg-muted/30 max-h-96 overflow-auto"
-    >
+    <div v-show="isExpanded" class="border-t border-border bg-muted/30 min-h-96 ">
       <pre class="p-4 text-xs font-mono text-foreground whitespace-pre-wrap break-all">{{
         JSON.stringify(metadata, null, 2)
       }}</pre>

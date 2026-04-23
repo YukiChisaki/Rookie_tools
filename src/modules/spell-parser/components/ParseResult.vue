@@ -67,22 +67,15 @@ function handleClose() {
     </div>
 
     <!-- 内容区 - 复用 PromptDetailViewer -->
-    <div class="flex-1 overflow-hidden">
-      <PromptDetailViewer
-        :name="image.fileName"
-        :positive="image.positivePrompt"
-        :negative="image.negativePrompt"
-        :parameters="image.parameters"
-        :preview-data="image.previewData"
-        :show-image="true"
-        :show-actions="true"
-        @copy="handleCopy"
-      />
-    </div>
+    <div class="flex-1 overflow-y-auto">
+      <PromptDetailViewer :name="image.fileName" :positive="image.positivePrompt" :negative="image.negativePrompt"
+        :parameters="image.parameters" :preview-data="image.previewData" :show-image="true" :show-actions="true"
+        @copy="handleCopy" />
 
-    <!-- 完整元数据 -->
-    <div class="px-6 pb-6">
+      <!-- 完整元数据 -->
+
       <MetadataViewer :metadata="image.rawMetadata" />
+
     </div>
   </div>
 </template>

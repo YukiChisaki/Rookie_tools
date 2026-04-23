@@ -72,26 +72,24 @@ async function handleImportToPrompts() {
   // 详细日志：检查所有要导入的数据
   console.log('[SpellParser] ========== 开始导入到提示词管理 ==========');
   console.log('[SpellParser] 图片基本信息:', {
-    id: image.id,
-    fileName: image.fileName,
-    generator: image.generator,
+    image,
   });
-  console.log('[SpellParser] 提示词数据:', {
-    positivePrompt: image.positivePrompt?.substring(0, 100) || '(空)',
-    positivePromptLength: image.positivePrompt?.length || 0,
-    negativePrompt: image.negativePrompt?.substring(0, 100) || '(空)',
-    negativePromptLength: image.negativePrompt?.length || 0,
-  });
-  console.log('[SpellParser] 参数数据:', {
-    hasParameters: !!image.parameters,
-    parameters: image.parameters ? JSON.stringify(image.parameters, null, 2) : '(undefined)',
-  });
-  console.log('[SpellParser] 图片数据:', {
-    hasThumbnailData: !!image.thumbnailData,
-    hasPreviewData: !!image.previewData,
-    thumbnailDataLength: image.thumbnailData?.length,
-    previewDataLength: image.previewData?.length,
-  });
+  // console.log('[SpellParser] 提示词数据:', {
+  //   positivePrompt: image.positivePrompt?.substring(0, 100) || '(空)',
+  //   positivePromptLength: image.positivePrompt?.length || 0,
+  //   negativePrompt: image.negativePrompt?.substring(0, 100) || '(空)',
+  //   negativePromptLength: image.negativePrompt?.length || 0,
+  // });
+  // console.log('[SpellParser] 参数数据:', {
+  //   hasParameters: !!image.parameters,
+  //   parameters: image.parameters ? JSON.stringify(image.parameters, null, 2) : '(undefined)',
+  // });
+  // console.log('[SpellParser] 图片数据:', {
+  //   hasThumbnailData: !!image.thumbnailData,
+  //   hasPreviewData: !!image.previewData,
+  //   thumbnailDataLength: image.thumbnailData?.length,
+  //   previewDataLength: image.previewData?.length,
+  // });
   console.log('[SpellParser] ========== 调用 importFromMetadata ==========');
 
   // 传递图片数据到提示词管理
