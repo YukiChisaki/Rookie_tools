@@ -9,6 +9,7 @@ import {
   ImageIcon,
   Copy,
   Archive,
+  ImagePlus,
 } from 'lucide-vue-next';
 import { MasonryWall } from '@yeger/vue-masonry-wall';
 import { useDialog, useMessage } from 'naive-ui';
@@ -117,13 +118,9 @@ function closeEditModal() {
   };
 }
 
-// 处理图片选择
-function handleImageSelect(data: any) {
-  const file = data?.file?.file || data?.fileList?.[0]?.file;
-  if (file instanceof File) {
-    editForm.value.imageFile = file;
-  }
-}
+// 图片上传相关 - 使用原生拖拽 + input，避免 n-upload 状态管理问题
+const imageInputRef = ref<HTMLInputElement | null>(null);
+const isDragOver = ref(false);
 
 // 图片预览URL
 const previewImageUrl = computed(() => {
@@ -133,8 +130,70 @@ const previewImageUrl = computed(() => {
   return editForm.value.previewData || '';
 });
 
+// 是否有预览图
+const hasImagePreview = computed(() => !!previewImageUrl.value);
+
+// 校验并设置图片文件
+function processImageFile(file: File | null) {
+  if (!file) return;
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    message.error('仅支持 JPG/PNG/GIF/WebP 格式');
+    return;
+  }
+
+  if (file.size > 20 * 1024 * 1024) {
+    message.error('图片大小不能超过 20MB');
+    return;
+  }
+
+  editForm.value.imageFile = file;
+}
+
+// 点击触发 input 选择文件
+function triggerImageSelect() {
+  imageInputRef.value?.click();
+}
+
+// input 文件变化
+function handleFileChange(e: Event) {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0] ?? null;
+  processImageFile(file);
+  // 重置 input 以便重复选择同一文件
+  target.value = '';
+}
+
+// 拖拽事件
+function handleDragOver(e: DragEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+  isDragOver.value = true;
+}
+
+function handleDragLeave(e: DragEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+  isDragOver.value = false;
+}
+
+function handleDrop(e: DragEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+  isDragOver.value = false;
+  const file = e.dataTransfer?.files[0] ?? null;
+  processImageFile(file);
+}
+
+// 移除图片
+function handleRemoveImage() {
+  editForm.value.imageFile = undefined;
+}
+
 // 保存提示词
 async function savePrompt() {
+  // TODO: 1. 解析原图数据 2. 保存提示词
   const form = editForm.value;
 
   let thumbnailData = form.thumbnailData;
@@ -166,7 +225,7 @@ async function savePrompt() {
   });
 
   if (isCreating.value) {
-    // 创建新提示词
+    // TODO:解析图片并创建新提示词
     const newPrompt = await promptStore.createPrompt({
       name: form.name,
       positive: form.positive,
@@ -235,21 +294,27 @@ async function copyFullPrompt() {
 <template>
   <div class="h-full flex flex-col">
     <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-border bg-card/50">
+    <div class="flex items-center justify-between px-6 py-4 border-b gap-3 border-border bg-card/50">
+      <!-- 左侧 -->
       <div class="flex items-center gap-3">
         <h2 class="text-lg font-bold text-foreground">提示词管理</h2>
         <span class="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-lg">
           {{ filteredPrompts.length }} 个提示词
         </span>
       </div>
-
-      <div class="flex items-center gap-3">
+      <!-- 右侧 -->
+      <div class="flex items-center gap-3 flex-1">
         <!-- 搜索框 -->
-        <div class="relative">
+        <div class="relative flex-1">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input v-model="searchQuery" type="text" placeholder="搜索提示词..." class="input-field pl-10 text-sm w-64" />
+          <input v-model="searchQuery" type="text" placeholder="搜索提示词..." class="input-field pl-10 text-sm w-[60%]" />
         </div>
 
+        <!-- TODO:批量导入 -->
+        <button @click="() => console.log('批量导入')" class="btn-primary opacity- text-sm flex items-center gap-2">
+          <Plus class="w-4 h-4" />
+          TODO批量导入
+        </button>
         <!-- 新建按钮 -->
         <button @click="openCreateModal" class="btn-primary text-sm flex items-center gap-2">
           <Plus class="w-4 h-4" />
@@ -300,12 +365,11 @@ async function copyFullPrompt() {
                     class="px-2 py-0.5 rounded-md text-sm font-semibold text-white bg-[#3498db]">
                     魔法
                   </span>
-                  <span v-else class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-white/90 bg-white/20">
+                  <span v-else class="px-2 py-0.5 rounded-md text-sm font-semibold text-white bg-[#f368e0]">
                     手动
                   </span>
                 </div>
               </div>
-
               <!-- Hover 遮罩层 - 底部信息 -->
               <div
                 class="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -374,9 +438,45 @@ async function copyFullPrompt() {
       </template>
 
       <div class="flex gap-6">
-        <!-- 左侧: 图片上传区域 -->
-        <div class="flex-shrink-0 w-[280px]">
+        <!-- 左侧: 图片上传区域 (原生拖拽 + input) -->
+        <div
+          class="image-upload-zone flex-shrink-0 w-[280px] h-[60vh] relative rounded-xl overflow-hidden group cursor-pointer transition-all duration-200"
+          :class="{ 'is-drag-over': isDragOver }" @click="triggerImageSelect" @dragover="handleDragOver"
+          @dragleave="handleDragLeave" @drop="handleDrop">
+          <!-- 隐藏的 file input -->
+          <input ref="imageInputRef" type="file" accept="image/*" class="hidden" @change="handleFileChange" />
 
+          <!-- 有预览图 -->
+          <template v-if="hasImagePreview">
+            <img :src="previewImageUrl" alt="Preview" class="w-full h-full object-contain bg-muted/30 rounded-xl" />
+
+            <!-- Hover 覆盖层 -->
+            <div
+              class="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-3 pointer-events-none">
+              <ImagePlus class="w-10 h-10 text-white/80" />
+              <p class="text-sm text-white font-medium">点击或拖拽更换图片</p>
+              <p class="text-xs text-white/50">支持 JPG、PNG、GIF、WebP</p>
+            </div>
+
+            <!-- 删除按钮 -->
+            <button
+              class="absolute top-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-200 z-10"
+              @click.stop="handleRemoveImage">
+              <X class="w-4 h-4" />
+            </button>
+          </template>
+
+          <!-- 无图占位 -->
+          <div v-else class="w-full h-full flex flex-col items-center justify-center rounded-xl">
+            <div
+              class="w-16 h-16 rounded-2xl bg-[rgba(52,152,219,0.1)] flex items-center justify-center mb-4 group-hover:bg-[rgba(52,152,219,0.18)] transition-colors duration-200">
+              <ImagePlus class="w-8 h-8 text-[#3498db]/70 group-hover:text-[#3498db] transition-colors duration-200" />
+            </div>
+            <p
+              class="text-sm font-medium text-foreground mb-1 group-hover:text-[#3498db] transition-colors duration-200">
+              点击或拖拽图片到此区域</p>
+            <p class="text-xs text-muted-foreground">支持 JPG、PNG、GIF、WebP 格式，最大 20MB</p>
+          </div>
         </div>
 
         <!-- 右侧: 表单内容 -->
@@ -395,10 +495,11 @@ async function copyFullPrompt() {
             <div class="flex items-center justify-between mb-2">
               <label class="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                正向提示词
+                正面提示词
               </label>
             </div>
-            <n-input v-model:value="editForm.positive" type="textarea" :rows="5" placeholder="输入正向提示词..." />
+            <textarea v-model="editForm.positive" :rows="5" placeholder="输入正面提示词..."
+              class="prompt-textarea prompt-textarea--positive" />
           </div>
 
           <!-- 负向提示词 -->
@@ -406,10 +507,11 @@ async function copyFullPrompt() {
             <div class="flex items-center justify-between mb-2">
               <label class="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                负向提示词
+                负面提示词
               </label>
             </div>
-            <n-input v-model:value="editForm.negative" type="textarea" :rows="4" placeholder="输入负向提示词..." />
+            <textarea v-model="editForm.negative" :rows="4" placeholder="输入负面提示词..."
+              class="prompt-textarea prompt-textarea--negative" />
           </div>
         </div>
       </div>
@@ -437,3 +539,76 @@ async function copyFullPrompt() {
     </n-modal>
   </div>
 </template>
+
+<style scoped>
+.image-upload-zone {
+  border: 2px dashed rgba(148, 163, 184, 0.4);
+  background-color: transparent;
+}
+
+.image-upload-zone:hover {
+  border-color: #3498db;
+  background-color: rgba(52, 152, 219, 0.04);
+}
+
+.image-upload-zone.is-drag-over {
+  border-color: #3498db;
+  background-color: rgba(52, 152, 219, 0.08);
+}
+
+/* 原生 textarea 基础样式 */
+.prompt-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  outline: none;
+  resize: vertical;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.prompt-textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* 浅色主题（默认） */
+.prompt-textarea {
+  background-color: rgba(241, 245, 249, 0.95);
+  color: #334155;
+}
+
+/* 深色主题 - 使用 .dark class 匹配 naive-ui 主题切换 */
+.dark .prompt-textarea {
+  background-color: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+}
+
+.dark .prompt-textarea::placeholder {
+  color: #64748b;
+}
+
+/* 正向提示词 - 绿色边框 */
+.prompt-textarea--positive {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.prompt-textarea--positive:focus,
+.prompt-textarea--positive:hover {
+  border-color: #22c55e;
+  /* box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); */
+}
+
+/* 负向提示词 - 红色边框 */
+.prompt-textarea--negative {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.prompt-textarea--negative:focus,
+.prompt-textarea--negative:hover {
+  border-color: #ef4444;
+  /* box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); */
+}
+</style>

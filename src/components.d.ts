@@ -24,6 +24,7 @@ declare module 'vue' {
     NSpace: typeof import('naive-ui')['NSpace']
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']
+    NTextarea: typeof import('naive-ui')['NTextarea']
     NUpload: typeof import('naive-ui')['NUpload']
     NUploadDragger: typeof import('naive-ui')['NUploadDragger']
     PromptDetailViewer: typeof import('./components/PromptDetailViewer.vue')['default']

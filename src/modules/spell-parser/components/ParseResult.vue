@@ -57,7 +57,7 @@ function handleClose() {
       <div class="flex items-center gap-2">
         <button @click="handleImport" class="btn-primary text-sm flex items-center gap-2">
           <FileDown class="w-4 h-4" />
-          导入提示词管理
+          导入到画廊
         </button>
         <button @click="handleClose"
           class="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors">
