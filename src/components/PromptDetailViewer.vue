@@ -8,6 +8,7 @@ import {
   Sparkles,
   AlertCircle,
   Ruler,
+  Trash2,
 } from 'lucide-vue-next';
 import type { ImageParameters } from '@/types';
 import { formatParameter } from '@/services/spellParser';
@@ -20,16 +21,19 @@ interface Props {
   previewData?: string;
   showImage?: boolean;
   showActions?: boolean;
+  showDelete?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   parameters: () => ({}),
   showImage: true,
   showActions: true,
+  showDelete: false,
 });
 
 const emit = defineEmits<{
   (e: 'copy', text: string, type: 'positive' | 'negative' | 'full'): void;
+  (e: 'delete'): void;
 }>();
 
 const copiedPositive = ref(false);
@@ -257,11 +261,12 @@ async function copyFull() {
         <!-- 底部操作栏 -->
         <div v-if="showActions" class="flex items-center justify-end gap-3 pt-4 border-t border-border">
           <button
-            @click="copyFull"
-            class="btn-secondary text-sm flex items-center gap-2"
+            v-if="showDelete"
+            @click="$emit('delete')"
+            class="text-sm flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
           >
-            <Copy class="w-4 h-4" />
-            复制全部
+            <Trash2 class="w-4 h-4" />
+            删除
           </button>
         </div>
       </div>

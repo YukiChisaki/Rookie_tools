@@ -6,8 +6,8 @@ import {
   X,
   FileText,
   Trash2,
-  Edit3,
   ImageIcon,
+  Copy,
 } from 'lucide-vue-next';
 import { MasonryWall } from '@yeger/vue-masonry-wall';
 import { useDialog, useMessage } from 'naive-ui';
@@ -212,6 +212,14 @@ function formatDate(timestamp: number): string {
 function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
   console.log(`已复制 ${type}:`, text.substring(0, 50) + '...');
 }
+
+// 复制全部提示词
+async function copyFullPrompt() {
+  if (!selectedPrompt.value) return;
+  const full = `正向提示词: ${selectedPrompt.value.positive}\n\n负向提示词: ${selectedPrompt.value.negative}`;
+  await navigator.clipboard.writeText(full);
+  message.success('已复制全部提示词');
+}
 </script>
 
 <template>
@@ -394,17 +402,11 @@ function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
               </div>
               <div class="flex items-center gap-2">
                 <button
-                  @click="openEditModal(selectedPrompt)"
+                  @click="copyFullPrompt()"
                   class="btn-secondary text-sm flex items-center gap-2"
                 >
-                  <Edit3 class="w-4 h-4" />
-                  编辑
-                </button>
-                <button
-                  @click="deletePrompt(selectedPrompt.id)"
-                  class="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
-                >
-                  <Trash2 class="w-4 h-4" />
+                  <Copy class="w-4 h-4" />
+                  复制全部
                 </button>
                 <button
                   @click="closeDetailModal"
@@ -424,7 +426,9 @@ function handleCopy(text: string, type: 'positive' | 'negative' | 'full') {
                 :preview-data="selectedPrompt.previewData"
                 :show-image="true"
                 :show-actions="true"
+                :show-delete="true"
                 @copy="handleCopy"
+                @delete="deletePrompt(selectedPrompt.id)"
               />
             </div>
           </div>
