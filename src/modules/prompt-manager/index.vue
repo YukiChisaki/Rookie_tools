@@ -357,7 +357,10 @@ async function copyFullPrompt() {
                 :preview-data="selectedPrompt.previewData" :show-image="false" :show-actions="true" :show-delete="true"
                 @copy="handleCopy" @delete="deletePrompt(selectedPrompt.id)" />
             </div>
+            <!-- 底部操作栏 -->
+
           </div>
+
         </div>
       </Transition>
     </Teleport>

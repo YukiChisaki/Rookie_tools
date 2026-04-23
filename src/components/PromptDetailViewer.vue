@@ -63,8 +63,8 @@ async function copyFull() {
 <template>
   <div class="h-full min-h-[800px] flex flex-col overflow-y-auto">
     <!-- 内容区 -->
-    <div class="flex-1 overflow-y-auto p-6">
-      <div class="w-full space-y-6">
+    <div class="flex-1 p-6">
+      <div class="w-full space-y-6 overflow-y-auto">
         <!-- 图片和信息 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- 图片预览 -->
@@ -222,15 +222,6 @@ async function copyFull() {
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 底部操作栏 -->
-        <div v-if="showActions" class="flex items-center justify-end gap-3 pt-4 border-t border-border">
-          <button v-if="showDelete" @click="$emit('delete')"
-            class="text-sm flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors">
-            <Trash2 class="w-4 h-4" />
-            删除
-          </button>
         </div>
       </div>
     </div>
