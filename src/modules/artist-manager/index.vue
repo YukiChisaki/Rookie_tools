@@ -8,8 +8,7 @@
  * @author CodeBuddy
  * @since 2026-04-24 21:14:00
  */
-import { ref, computed, watch, h, onUnmounted } from 'vue'
-import { NTag } from 'naive-ui'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import {
   Plus,
   Search,
@@ -63,44 +62,16 @@ const editForm = ref<EditFormType>({
   tags: [],
 })
 
-// ============ 标签渲染函数（render-tag） ============
+// ============ 标签颜色工具函数 ============
 /** Naive UI Tag 可用类型列表 */
 const TAG_TYPES: readonly ('success' | 'info' | 'warning' | 'error' | 'default')[] = [
   'success', 'info', 'warning', 'error', 'default',
 ]
 
 /** 基于索引哈希生成稳定的随机标签颜色 */
-function getTagTypeForIndex(index: number) {
+const getTagTypeForIndex = (index: number): 'success' | 'info' | 'warning' | 'error' | 'default' => {
   const hash = (index * 2654435761) & 0x7fffffff
   return TAG_TYPES[hash % TAG_TYPES.length]
-}
-
-/** 渲染画师名标签 — 使用 h() 渲染函数，每个标签随机颜色 */
-function renderArtistTag(tag: string, index: number) {
-  return h(
-    NTag,
-    {
-      type: getTagTypeForIndex(index),
-
-      bordered: false,
-      closable: true,
-    },
-    { default: () => tag }
-  )
-}
-
-/** 渲染卡片标签 — 使用 h() 渲染函数，偏移画师名数量避免颜色重复 */
-function renderCardTag(tag: string, index: number) {
-  return h(
-    NTag,
-    {
-      type: getTagTypeForIndex(editForm.value.artistNames.length + index),
-
-      bordered: false,
-      closable: true,
-    },
-    { default: () => tag }
-  )
 }
 
 // ============ 弹窗操作 ============
@@ -281,7 +252,7 @@ function useCopyAction(resetText: string) {
 
     try {
       await navigator.clipboard.writeText(content)
-      text.value = '已复制 ✓'
+      // text.value = '已复制 ✓'
       message.success('已复制到剪贴板')
     } catch (err) {
       console.error('Clipboard write failed:', err)
@@ -332,14 +303,74 @@ const normalCopyPreview = computed(() => getPreview(cleanedArtistNames.value, fo
 const animaCopyPreview = computed(() => getPreview(cleanedArtistNames.value, formatters.anima))
 
 
-// ============ 工具函数 ============
+// ============ 逗号分隔输入逻辑 ============
+
+/** 画师配方输入框的临时文本 */
+const artistInputText = ref('')
+
+/** 卡片标签输入框的临时文本 */
+const tagInputText = ref('')
+
+/**
+ * 处理画师配方输入：回车时按逗号分割，去重后追加到 editForm.artistNames
+ * @author Chisaki / 68142319
+ * @since 2026-04-25 01:26:00
+ */
+function handleArtistInputKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    parseAndAddItems(artistInputText.value, 'artist')
+    artistInputText.value = ''
+  }
+}
+
+/**
+ * 处理卡片标签输入：回车时按逗号分割，去重后追加到 editForm.tags
+ * @author Chisaki / 68142319
+ * @since 2026-04-25 01:26:00
+ */
+function handleTagInputKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    parseAndAddItems(tagInputText.value, 'tag')
+    tagInputText.value = ''
+  }
+}
+
+/**
+ * 通用解析逻辑：按中英文逗号分割、trim、过滤空值、去重后追加到对应数组
+ *
+ * @param rawInput 原始输入文本
+ * @param type 目标类型：'artist' → artistNames | 'tag' → tags
+ */
+function parseAndAddItems(rawInput: string, type: 'artist' | 'tag') {
+  const items = rawInput.split(/[,，]/).map((s) => s.trim()).filter((s) => s.length > 0)
+  const targetArr = type === 'artist' ? editForm.value.artistNames : editForm.value.tags
+  const existingSet = new Set(targetArr.map((t) => t.toLowerCase()))
+  for (const item of items) {
+    if (!existingSet.has(item.toLowerCase())) {
+      existingSet.add(item.toLowerCase())
+      targetArr.push(item)
+    }
+  }
+}
+
+/**
+ * 移除指定索引的标签项（通用）
+ * @author Chisaki / 68142319
+ * @since 2026-04-25 01:26:00
+ */
+function removeTagItem(type: 'artist' | 'tag', index: number) {
+  const arr = type === 'artist' ? editForm.value.artistNames : editForm.value.tags
+  arr.splice(index, 1)
+}
 function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
 }
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
+  <div class="h-full flex flex-col ">
     <!-- ==================== Block 1: 顶栏导航区 ==================== -->
     <div class="flex items-center justify-between px-6 py-4 border-b border-border bg-card/50 gap-3 shrink-0">
       <div class="flex items-center gap-3">
@@ -418,7 +449,7 @@ function formatDate(timestamp: number): string {
                         <template #trigger>
                           <button
                             @click.stop="cardNormalCopyBtn.doCopy(formatters.normal(chain.artistNames.map(n => n.trim().toLowerCase()).filter(Boolean)))"
-                            class="btn-primary !py-2 !px-4 text-sm flex items-center gap-1 font-medium shadow-lg shadow-primary/20 hover:!bg-white hover:!text-primary hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200">
+                            class="!p-1 text-sm  rounded-xl flex items-center gap-1 font-medium bg-[--primary] text-white hover:!bg-white hover:!text-primary  hover:-translate-y-0.5 transition-all duration-200">
                             <Parentheses class="w-4 h-4" />
                             {{ cardNormalCopyBtn.text }}
                           </button>
@@ -435,7 +466,7 @@ function formatDate(timestamp: number): string {
                         <template #trigger>
                           <button
                             @click.stop="cardAnimaCopyBtn.doCopy(formatters.anima(chain.artistNames.map(n => n.trim().toLowerCase()).filter(Boolean)))"
-                            class="!py-2 !px-4 text-sm flex items-center gap-1 font-medium rounded-xl bg-pink-500 text-white hover:bg-white hover:text-pink-500 transition-all duration-200 hover:-translate-y-0.5">
+                            class="!p-1 text-sm flex items-center gap-1 font-medium rounded-xl bg-pink-500 text-white hover:bg-white hover:text-pink-500 transition-all duration-200 hover:-translate-y-0.5">
                             <AtSign class="w-4 h-4" />
                             {{ cardAnimaCopyBtn.text }}
                           </button>
@@ -463,7 +494,7 @@ function formatDate(timestamp: number): string {
       style="width: 920px; border-radius: 24px; overflow: hidden;" :segmented="{ content: true, footer: 'soft' }"
       class="artist-edit-modal">
       <template #header>
-        <div class="flex items-center gap-3 w-full pr-6">
+        <div class=" flex items-center gap-3 w-full pr-6">
           <div
             class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
             <Palette class="w-5 h-5 text-primary" />
@@ -507,7 +538,7 @@ function formatDate(timestamp: number): string {
 
           <!-- 无图占位 -->
           <div v-else
-            class="w-full h-full flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40 border border-dashed border-border/60 group-hover:border-primary/40 transition-all duration-300">
+            class="w-full h-full flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40 border border-dashed border-border/60 group-hover:border-[--secondary] transition-all duration-300">
             <div class="relative mb-5">
               <div
                 class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center group-hover:from-primary/25 group-hover:to-primary/10 transition-all duration-300 shadow-lg shadow-primary/5 group-hover:shadow-primary/20 group-hover:scale-105">
@@ -524,10 +555,6 @@ function formatDate(timestamp: number): string {
             <p class="text-xs text-muted-foreground text-center max-w-[200px] leading-relaxed">
               支持 JPG、PNG、GIF、WebP 格式<br />最大支持 20MB
             </p>
-            <div
-              class="mt-5 px-4 py-2 rounded-full bg-muted/60 border border-border/40 text-xs text-muted-foreground font-medium group-hover:border-primary/30 group-hover:text-primary/70 transition-all duration-300">
-              浏览文件选择
-            </div>
           </div>
         </div>
 
@@ -539,22 +566,17 @@ function formatDate(timestamp: number): string {
               <!-- ========== 表单区（新建/编辑共用） ========== -->
 
               <!-- 配方名称 -->
-              <div class="group-form">
+              <div class="group-form rounded-xl p-4 border border-[--secondary]">
                 <label class="flex items-center gap-2 text-sm font-semibold text-foreground mb-2.5">
                   <div class="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-cyan-400"></div>
                   配方名称
                   <span class="text-xs font-normal text-muted-foreground">(必填)</span>
                 </label>
-                <div
-                  class="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/50 hover:border-blue-400/50 transition-all duration-200 input-group">
-                  <input v-model="editForm.name" type="text"
-                    class="flex-1 text-sm font-medium text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -ml-1 transition-colors"
-                    placeholder="给这个配方起个名字..." />
-                </div>
+                <n-input v-model:value="editForm.name" type="text" placeholder="给这个配方起个名字..." clearable />
               </div>
 
-              <!-- 画师配方（动态标签） -->
-              <div class="group-form border border-primary/10 rounded-xl p-4">
+              <!-- 画师配方（逗号分隔输入 + Tag 展示） -->
+              <div class="group-form rounded-xl p-4 border border-[--secondary]">
                 <label class="flex items-center gap-2 text-sm font-semibold text-foreground mb-2.5">
                   <div class="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-violet-400 to-purple-400"></div>
                   画师配方
@@ -563,24 +585,43 @@ function formatDate(timestamp: number): string {
                     {{ editForm.artistNames.length }}
                   </span>
                 </label>
-                <n-dynamic-tags v-model:value="editForm.artistNames" :render-tag="renderArtistTag" :bordered="false"
-                  size="medium" :max="2000" class="w-full" />
+                <!-- 输入框：Naive UI n-input，自动适配深色模式 -->
+                <n-input v-model:value="artistInputText" type="text" placeholder="输入画师名，逗号分隔，回车确认..." class="mb-2.5"
+                  clearable @keydown="handleArtistInputKeydown" />
+                <!-- Tag 展示区：Naive UI n-tag 组件 -->
+                <div v-if="editForm.artistNames.length > 0" class="flex flex-wrap gap-1.5">
+                  <n-tag v-for="(name, idx) in editForm.artistNames" :key="idx" :type="getTagTypeForIndex(idx)"
+                    :bordered="false" closable @close="removeTagItem('artist', idx)">
+                    {{ name }}
+                  </n-tag>
+                </div>
+                <p v-else class="text-xs text-muted-foreground/50 italic">暂无画师，请在上方输入</p>
               </div>
 
-              <!-- 卡片标签（动态标签） -->
-              <div class="group-form border border-primary/10 rounded-xl p-4">
+              <!-- 卡片标签（逗号分隔输入 + Tag 展示） -->
+              <div class="group-form rounded-xl p-4 border border-[--secondary]">
                 <label class="flex items-center gap-2 text-sm font-semibold text-foreground mb-2.5">
                   <div class="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-400"></div>
                   卡片标签
                   <span class="text-xs font-normal text-muted-foreground">(可选)</span>
                 </label>
-                <n-dynamic-tags v-model:value="editForm.tags" :render-tag="renderCardTag" :bordered="false"
-                  size="medium" class="w-full" />
+                <!-- 输入框：Naive UI n-input，自动适配深色模式 -->
+                <n-input v-model:value="tagInputText" type="text" placeholder="输入标签，逗号分隔，回车确认..." clearable
+                  class="mb-2.5" @keydown="handleTagInputKeydown" />
+                <!-- Tag 展示区：Naive UI n-tag 组件 -->
+                <div v-if="editForm.tags.length > 0" class="flex flex-wrap gap-1.5">
+                  <n-tag v-for="(tag, idx) in editForm.tags" :key="idx"
+                    :type="getTagTypeForIndex(editForm.artistNames.length + idx)" :bordered="false" closable
+                    @close="removeTagItem('tag', idx)">
+                    {{ tag }}
+                  </n-tag>
+                </div>
+                <p v-else class="text-xs text-muted-foreground/50 italic">暂无标签，请在上方输入</p>
               </div>
 
               <!-- 画师 Tag 展示 + 复制按钮 -->
               <div v-if="!isCreating && editForm.id"
-                class="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-xl p-4 space-y-3 border border-primary/10">
+                class="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-xl p-4 space-y-3 border border-[--secondary]">
                 <div class="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <Copy class="w-4 h-4 text-primary" />
                   配方复制
