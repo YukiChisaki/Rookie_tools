@@ -499,37 +499,38 @@ async function copyFullPrompt() {
         <!-- 右侧: 表单内容 -->
         <n-scrollbar class="flex-1 min-w-0" style="max-height: 60vh">
           <div class="pr-1 space-y-5">
-          <!-- 名称 -->
-          <div>
-            <label class="block text-sm font-medium text-foreground mb-2">
-              提示词名称
-            </label>
-            <n-input v-model:value="editForm.name" placeholder="输入提示词名称..." />
-          </div>
-
-
-          <!-- 正向提示词 -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                正面提示词
+            <!-- 名称 -->
+            <div>
+              <label class="block text-sm font-medium text-foreground mb-2">
+                提示词名称
               </label>
+              <n-input v-model:value="editForm.name" placeholder="输入提示词名称..." />
             </div>
-            <textarea v-model="editForm.positive" :rows="5" placeholder="输入正面提示词..."
-              class="prompt-textarea prompt-textarea--positive" />
-          </div>
 
-          <!-- 负向提示词 -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                负面提示词
-              </label>
+
+            <!-- 正向提示词 -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  正面提示词
+                </label>
+              </div>
+              <textarea v-model="editForm.positive" :rows="5" placeholder="输入正面提示词..."
+                class="prompt-textarea prompt-textarea--positive" />
             </div>
-            <textarea v-model="editForm.negative" :rows="4" placeholder="输入负面提示词..."
-              class="prompt-textarea prompt-textarea--negative" />
+
+            <!-- 负向提示词 -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                  负面提示词
+                </label>
+              </div>
+              <textarea v-model="editForm.negative" :rows="4" placeholder="输入负面提示词..."
+                class="prompt-textarea prompt-textarea--negative" />
+            </div>
           </div>
         </n-scrollbar>
       </div>
