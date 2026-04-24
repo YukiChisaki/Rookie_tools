@@ -14,7 +14,6 @@ import { useTagStore } from './stores/tag'
 import { usePromptStore } from './stores/prompt'
 import { useArtistStore } from './stores/artist'
 import { useTagLoader } from './composables/useTagLoader'
-import { useArtistLoader } from './composables/useArtistLoader'
 import { themeOverrides, darkThemeOverrides } from './styles/naiveTheme'
 import type { ModuleType } from './types'
 
@@ -30,7 +29,7 @@ const modules = [
   { id: 'spell' as ModuleType, label: '魔法解析', icon: Sparkles },
   { id: 'tags' as ModuleType, label: '快速标签', icon: Tags },
   { id: 'prompts' as ModuleType, label: '私人画廊', icon: FileText },
-  { id: 'artists' as ModuleType, label: '画师与串', icon: Palette },
+  { id: 'artists' as ModuleType, label: '蜜汁配方', icon: Palette },
 ]
 
 const tagStore = useTagStore()
@@ -65,9 +64,8 @@ onMounted(() => {
   }
 })
 
-// Auto-load tags and artists
+// Auto-load tags
 useTagLoader()
-useArtistLoader()
 
 onMounted(async () => {
   // Load existing data

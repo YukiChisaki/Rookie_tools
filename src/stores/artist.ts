@@ -1,191 +1,146 @@
+/**
+ * 画师串管理 Store（蜜汁配方模块）
+ * 负责画师串的 CRUD 操作、搜索过滤和数据持久化
+ * @author CodeBuddy
+ * @since 2026-04-24 21:14:00
+ */
+
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { db } from '../services/db';
-import type { Artist, ArtistChain } from '../types';
+import type { ArtistChain } from '../types';
 import { STORES } from '../types';
 
 export const useArtistStore = defineStore('artist', () => {
-  // State
-  const artists = ref<Artist[]>([]);
+  // ============ State ============
   const artistChains = ref<ArtistChain[]>([]);
   const isLoading = ref(false);
   const searchQuery = ref('');
 
-  // Getters
-  const filteredArtists = computed(() => {
-    let result = artists.value;
+  // ============ Getters ============
 
-    if (searchQuery.value.trim()) {
-      const query = searchQuery.value.toLowerCase();
-      result = result.filter(artist => 
-        artist.name.toLowerCase().includes(query)
-      );
-    }
-
-    return result.sort((a, b) => {
-      // Favorites first
-      if (a.isFavorite !== b.isFavorite) {
-        return a.isFavorite ? -1 : 1;
-      }
-      // Then by use count
-      return b.useCount - a.useCount;
-    });
+  /** 按 updatedAt 降序排列的画师串列表 */
+  const sortedChains = computed(() => {
+    return [...artistChains.value].sort((a, b) => b.updatedAt - a.updatedAt);
   });
 
-  const favoriteArtists = computed(() => {
-    return artists.value.filter(a => a.isFavorite);
+  /** 按 searchQuery 过滤后的画师串列表（匹配名称或画师名） */
+  const filteredChains = computed(() => {
+    if (!searchQuery.value.trim()) return sortedChains.value;
+
+    const query = searchQuery.value.toLowerCase();
+    return sortedChains.value.filter(
+      (chain) =>
+        chain.name.toLowerCase().includes(query) ||
+        chain.artistNames.some((name) => name.toLowerCase().includes(query))
+    );
   });
 
-  const getArtistById = computed(() => (id: string) => {
-    return artists.value.find(a => a.id === id);
-  });
-
+  /** 根据 ID 获取单个画师串 */
   const getChainById = computed(() => (id: string) => {
-    return artistChains.value.find(c => c.id === id);
+    return artistChains.value.find((c) => c.id === id);
   });
 
-  const getArtistsInChain = computed(() => (chainId: string) => {
-    const chain = artistChains.value.find(c => c.id === chainId);
-    if (!chain) return [];
-    return chain.artistIds
-      .map(id => artists.value.find(a => a.id === id))
-      .filter(Boolean) as Artist[];
-  });
+  // ============ Actions ============
 
-  // Actions
+  /**
+   * 从 IndexedDB 加载画师串数据
+   * 包含防御性旧数据迁移逻辑：检测到旧版 artistIds 字段时映射为空数组
+   */
   async function loadArtists() {
     isLoading.value = true;
     try {
-      artists.value = await db.getAll<Artist>(STORES.ARTISTS);
-      artistChains.value = await db.getAll<ArtistChain>(STORES.ARTIST_CHAINS);
+      const chains = await db.getAll<ArtistChain>(STORES.ARTIST_CHAINS);
+      // 防御性迁移：旧版数据可能含有 artistIds 字段，需转换为新格式
+      artistChains.value = chains.map((chain) => {
+        const oldChain = chain as Record<string, unknown>;
+        if ('artistIds' in oldChain && !('artistNames' in oldChain)) {
+          return {
+            ...chain,
+            artistNames: [],
+            updatedAt: chain.updatedAt || chain.createdAt,
+          } as ArtistChain;
+        }
+        return chain;
+      });
     } finally {
       isLoading.value = false;
     }
   }
 
-  async function addArtist(data: Omit<Artist, 'id' | 'useCount'>): Promise<Artist> {
-    const artist: Artist = {
-      ...data,
-      id: crypto.randomUUID(),
-      useCount: 0,
-    };
-    await db.put(STORES.ARTISTS, artist);
-    artists.value.push(artist);
-    return artist;
-  }
-
-  async function updateArtist(id: string, updates: Partial<Artist>) {
-    const artist = artists.value.find(a => a.id === id);
-    if (!artist) return;
-
-    const updated = { ...artist, ...updates };
-    await db.put(STORES.ARTISTS, updated);
-    const index = artists.value.findIndex(a => a.id === id);
-    if (index !== -1) {
-      artists.value[index] = updated;
-    }
-  }
-
-  async function toggleFavorite(id: string) {
-    const artist = artists.value.find(a => a.id === id);
-    if (artist) {
-      await updateArtist(id, { isFavorite: !artist.isFavorite });
-    }
-  }
-
-  async function incrementUseCount(id: string) {
-    const artist = artists.value.find(a => a.id === id);
-    if (artist) {
-      artist.useCount++;
-      await db.put(STORES.ARTISTS, artist);
-    }
-  }
-
-  async function deleteArtist(id: string) {
-    await db.delete(STORES.ARTISTS, id);
-    artists.value = artists.value.filter(a => a.id !== id);
-  }
-
-  // Artist Chain actions
-  async function createChain(name: string, artistIds: string[]): Promise<ArtistChain> {
+  /**
+   * 创建新的画师串
+   * @param name 配方名称
+   * @param artistNames 画师名称数组
+   * @param thumbnailData 可选的缩略图 Base64 数据
+   * @param previewData 可选的预览图 Base64 数据
+   * @param tags 可选的自定义标签数组
+   */
+  async function createChain(
+    name: string,
+    artistNames: string[],
+    thumbnailData?: string,
+    previewData?: string,
+    tags?: string[]
+  ): Promise<ArtistChain> {
+    const now = Date.now();
     const chain: ArtistChain = {
       id: crypto.randomUUID(),
       name,
-      artistIds,
-      createdAt: Date.now(),
+      artistNames,
+      thumbnailData,
+      previewData,
+      tags: tags && tags.length > 0 ? tags : undefined,
+      createdAt: now,
+      updatedAt: now,
     };
     await db.put(STORES.ARTIST_CHAINS, chain);
     artistChains.value.push(chain);
     return chain;
   }
 
+  /**
+   * 更新画师串
+   * @param id 画师串 ID
+   * @param updates 要更新的字段（部分更新）
+   */
   async function updateChain(id: string, updates: Partial<ArtistChain>) {
-    const chain = artistChains.value.find(c => c.id === id);
+    const chain = artistChains.value.find((c) => c.id === id);
     if (!chain) return;
 
-    const updated = { ...chain, ...updates };
+    const updated = { ...chain, ...updates, updatedAt: Date.now() };
     await db.put(STORES.ARTIST_CHAINS, updated);
-    const index = artistChains.value.findIndex(c => c.id === id);
+    const index = artistChains.value.findIndex((c) => c.id === id);
     if (index !== -1) {
       artistChains.value[index] = updated;
     }
   }
 
+  /**
+   * 删除画师串
+   * @param id 画师串 ID
+   */
   async function deleteChain(id: string) {
     await db.delete(STORES.ARTIST_CHAINS, id);
-    artistChains.value = artistChains.value.filter(c => c.id !== id);
+    artistChains.value = artistChains.value.filter((c) => c.id !== id);
   }
 
-  // Import artists from text file
-  async function importArtists(names: string[]) {
-    const existingNames = new Set(artists.value.map(a => a.name.toLowerCase()));
-    const newArtists: Artist[] = [];
-
-    for (const name of names) {
-      const trimmedName = name.trim();
-      if (trimmedName && !existingNames.has(trimmedName.toLowerCase())) {
-        newArtists.push({
-          id: crypto.randomUUID(),
-          name: trimmedName,
-          isFavorite: false,
-          useCount: 0,
-        });
-        existingNames.add(trimmedName.toLowerCase());
-      }
-    }
-
-    if (newArtists.length > 0) {
-      await db.bulkPut(STORES.ARTISTS, newArtists);
-      artists.value.push(...newArtists);
-    }
-
-    return newArtists.length;
-  }
-
+  /** 设置搜索关键词 */
   function setSearchQuery(query: string) {
     searchQuery.value = query;
   }
 
   return {
-    artists,
     artistChains,
     isLoading,
     searchQuery,
-    filteredArtists,
-    favoriteArtists,
-    getArtistById,
+    sortedChains,
+    filteredChains,
     getChainById,
-    getArtistsInChain,
     loadArtists,
-    addArtist,
-    updateArtist,
-    toggleFavorite,
-    incrementUseCount,
-    deleteArtist,
     createChain,
     updateChain,
     deleteChain,
-    importArtists,
     setSearchQuery,
   };
 });

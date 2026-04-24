@@ -51,22 +51,26 @@ export interface PromptRecord {
   updatedAt: number;
 }
 
-// ==================== 画师管理 ====================
+// ==================== 画师管理（蜜汁配方） ====================
 
-export interface Artist {
-  id: string;
-  name: string;
-  previewImage?: string;
-  isFavorite: boolean;
-  useCount: number;
-}
-
+/**
+ * 画师串（Artist Chain / Recipe）
+ * 用户创建的画师组合配方，包含名称、关联图片和一组画师名
+ */
 export interface ArtistChain {
   id: string;
+  /** 配方名称 */
   name: string;
-  artistIds: string[];
-  previewImage?: string;
+  /** 画师名称数组（直接存储名称字符串） */
+  artistNames: string[];
+  /** 卡片标签数组（用户自定义分类标签，逗号分隔输入） */
+  tags?: string[];
+  /** Base64 缩略图 (120x120)，用于瀑布流卡片展示 */
+  thumbnailData?: string;
+  /** Base64 预览图 (短边≤900px)，用于详情弹窗大图展示 */
+  previewData?: string;
   createdAt: number;
+  updatedAt: number;
 }
 
 // ==================== 魔法解析 ====================
