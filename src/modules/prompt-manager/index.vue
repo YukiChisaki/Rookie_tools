@@ -359,7 +359,7 @@ async function copyFullPrompt() {
         <MasonryWall v-else :items="filteredPrompts" :column-width="220" :gap="16" :ssr-columns="1">
           <template #default="{ item: prompt }">
             <div
-              class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]">
+              class="group bg-card border border-dotted border-[--primary]  rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
               <!-- 图片区域 -->
               <div class="bg-muted/50 relative overflow-hidden" @click="openDetailModal(prompt)">
                 <img v-if="prompt.previewData" :src="prompt.previewData" :alt="prompt.name"

@@ -20,6 +20,7 @@ import {
   Copy,
   AtSign,
   ImagePlus,
+  Parentheses,
 } from 'lucide-vue-next'
 import { MasonryWall } from '@yeger/vue-masonry-wall'
 import { useDialog, useMessage } from 'naive-ui'
@@ -210,7 +211,7 @@ async function saveChain() {
 
   if (isCreating.value) {
     await artistStore.createChain(form.name.trim(), names, thumbnailData, previewData, tags)
-    message.success('配方创建成功')
+    message.success('配方已创建')
   } else if (form.id) {
     await artistStore.updateChain(form.id, {
       name: form.name.trim(),
@@ -219,7 +220,7 @@ async function saveChain() {
       thumbnailData,
       previewData,
     })
-    message.success('配方保存成功')
+    message.success('配方已保存')
   }
   closeEditModal()
 }
@@ -307,6 +308,10 @@ function useCopyAction(resetText: string) {
 const normalCopyBtn = useCopyAction('SDXL')
 const animaCopyBtn = useCopyAction('Anima')
 
+// 瀑布流卡片专用按钮状态（短文本版本）
+const cardNormalCopyBtn = useCopyAction('XL')
+const cardAnimaCopyBtn = useCopyAction('AM')
+
 // 执行复制入口：传入格式化后的文本
 const copyNormalFormat = () => normalCopyBtn.doCopy(formatters.normal(cleanedArtistNames.value))
 const copyAnimaFormat = () => animaCopyBtn.doCopy(formatters.anima(cleanedArtistNames.value))
@@ -376,7 +381,7 @@ function formatDate(timestamp: number): string {
         <MasonryWall v-else :items="filteredChains" :column-width="220" :gap="16" :ssr-columns="1">
           <template #default="{ item: chain }">
             <div
-              class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]">
+              class="group bg-card border border-dotted border-[--secondary] rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ">
               <!-- 图片区域 — 点击直接进入编辑弹窗 -->
               <div class="bg-muted/50 relative overflow-hidden" @click="openEditModal(chain)">
                 <img v-if="chain.previewData" :src="chain.previewData" :alt="chain.name"
@@ -391,7 +396,10 @@ function formatDate(timestamp: number): string {
                 <div class="absolute inset-x-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div class="flex items-center justify-between px-3 py-2 bg-black/40">
                     <span class="text-sm text-white/90">{{ formatDate(chain.updatedAt) }}</span>
-                    <span class="px-2 py-0.5 rounded-md text-xs font-semibold text-white bg-[#f368e0]">手动</span>
+                    <button @click.stop="deleteChain(chain.id)"
+                      class="w-7 h-7 bg-white text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center flex-shrink-0">
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
                 <!-- Hover 底部遮罩：名称 + 数量 + 删除 -->
@@ -404,10 +412,44 @@ function formatDate(timestamp: number): string {
                         {{ chain.artistNames.length }}
                       </span>
                     </div>
-                    <button @click.stop="deleteChain(chain.id)"
-                      class="w-7 h-7 bg-white text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center flex-shrink-0">
-                      <Trash2 class="w-3.5 h-3.5" />
-                    </button>
+                    <!-- 复制 -->
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                      <n-popover trigger="hover" placement="bottom" :show-arrow="false">
+                        <template #trigger>
+                          <button
+                            @click.stop="cardNormalCopyBtn.doCopy(formatters.normal(chain.artistNames.map(n => n.trim().toLowerCase()).filter(Boolean)))"
+                            class="btn-primary !py-2 !px-4 text-sm flex items-center gap-1 font-medium shadow-lg shadow-primary/20 hover:!bg-white hover:!text-primary hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200">
+                            <Parentheses class="w-4 h-4" />
+                            {{ cardNormalCopyBtn.text }}
+                          </button>
+                        </template>
+                        <div class="max-w-[280px] text-xs leading-relaxed">
+                          <p class="text-muted-foreground mb-1">配方预览：</p>
+                          <p class="font-mono text-foreground break-all bg-muted/60 rounded-md px-2 py-1.5">{{
+                            getPreview([...new Set(chain.artistNames.map(n => n.trim().toLowerCase()).filter(Boolean))],
+                              formatters.normal)
+                          }}</p>
+                        </div>
+                      </n-popover>
+                      <n-popover trigger="hover" placement="bottom" :show-arrow="false">
+                        <template #trigger>
+                          <button
+                            @click.stop="cardAnimaCopyBtn.doCopy(formatters.anima(chain.artistNames.map(n => n.trim().toLowerCase()).filter(Boolean)))"
+                            class="!py-2 !px-4 text-sm flex items-center gap-1 font-medium rounded-xl bg-pink-500 text-white hover:bg-white hover:text-pink-500 transition-all duration-200 hover:-translate-y-0.5">
+                            <AtSign class="w-4 h-4" />
+                            {{ cardAnimaCopyBtn.text }}
+                          </button>
+                        </template>
+                        <div class="max-w-[280px] text-xs leading-relaxed">
+                          <p class="text-muted-foreground mb-1">配方预览：</p>
+                          <p class="font-mono text-foreground break-all bg-muted/60 rounded-md px-2 py-1.5">{{
+                            getPreview([...new Set(chain.artistNames.map(n => n.trim().toLowerCase()).filter(Boolean))],
+                              formatters.anima)
+                          }}</p>
+                        </div>
+                      </n-popover>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -461,12 +503,6 @@ function formatDate(timestamp: number): string {
               <p class="text-sm text-white font-medium tracking-wide">点击或拖拽更换图片</p>
               <p class="text-xs text-white/50">支持 JPG、PNG、GIF、WebP</p>
             </div>
-            <!-- 删除按钮 -->
-            <!-- <button
-              class="absolute top-3 right-3 w-8 h-8 bg-red-500/90 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-110 flex items-center justify-center transition-all duration-200 z-10 backdrop-blur-sm"
-              @click.stop="handleRemoveImage">
-              <X class="w-4 h-4" />
-            </button> -->
           </template>
 
           <!-- 无图占位 -->
@@ -553,8 +589,8 @@ function formatDate(timestamp: number): string {
                   <n-popover trigger="hover" placement="bottom" :show-arrow="false">
                     <template #trigger>
                       <button @click="copyNormalFormat"
-                        class="btn-primary !py-2 !px-4 text-sm flex items-center gap-2 font-medium shadow-lg shadow-primary/20 hover:!bg-white hover:!text-primary hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200">
-                        <Copy class="w-4 h-4" />
+                        class="btn-primary !py-2 !px-4 text-sm flex items-center gap-1 font-medium shadow-lg shadow-primary/20 hover:!bg-white hover:!text-primary hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200">
+                        <Parentheses class="w-4 h-4" />
                         {{ normalCopyBtn.text }}
                       </button>
                     </template>
@@ -568,7 +604,7 @@ function formatDate(timestamp: number): string {
                   <n-popover trigger="hover" placement="bottom" :show-arrow="false">
                     <template #trigger>
                       <button @click="copyAnimaFormat"
-                        class="!py-2 !px-4 text-sm flex items-center gap-2 font-medium rounded-xl bg-pink-500 text-white hover:bg-white hover:text-pink-500 transition-all duration-200 hover:-translate-y-0.5">
+                        class="!py-2 !px-4 text-sm flex items-center gap-1 font-medium rounded-xl bg-pink-500 text-white hover:bg-white hover:text-pink-500 transition-all duration-200 hover:-translate-y-0.5">
                         <AtSign class="w-4 h-4" />
                         {{ animaCopyBtn.text }}
                       </button>
@@ -582,12 +618,6 @@ function formatDate(timestamp: number): string {
                   </n-popover>
                 </div>
               </div>
-
-              <textarea name="" id="">
-
-
-          </textarea>
-
             </div>
           </n-scrollbar>
         </div>
