@@ -29,7 +29,7 @@ const currentModule = ref<ModuleType>('spell')
 const modules = [
   { id: 'spell' as ModuleType, label: '魔法解析', icon: Sparkles },
   { id: 'tags' as ModuleType, label: '快速标签', icon: Tags },
-  { id: 'prompts' as ModuleType, label: '瀑布画廊', icon: FileText },
+  { id: 'prompts' as ModuleType, label: '私人画廊', icon: FileText },
   { id: 'artists' as ModuleType, label: '画师与串', icon: Palette },
 ]
 
@@ -123,10 +123,9 @@ onMounted(async () => {
             <main class="flex-1 overflow-hidden bg-background">
               <Transition name="fade" mode="out-in">
                 <!-- <TagSelector v-if="currentModule === 'tags'" key="tags" /> -->
-                <!-- <ArtistManager v-else-if="currentModule === 'artists'" key="artists" /> -->
                 <SpellParser v-if="currentModule === 'spell'" key="spell" />
                 <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
-
+                <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
               </Transition>
             </main>
           </div>
