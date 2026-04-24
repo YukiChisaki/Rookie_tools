@@ -325,10 +325,10 @@ async function copyFullPrompt() {
         </div>
 
         <!-- TODO:批量导入 -->
-        <button @click="() => console.log('批量导入')" class="btn-primary opacity- text-sm flex items-center gap-2">
+        <n-button @click="() => console.log('批量导入')" disabled type="info" class="text-sm flex items-center gap-2">
           <Plus class="w-4 h-4" />
           TODO批量导入
-        </button>
+        </n-button>
         <!-- 新建按钮 -->
         <button @click="openCreateModal" class="btn-primary text-sm flex items-center gap-2">
           <Plus class="w-4 h-4" />

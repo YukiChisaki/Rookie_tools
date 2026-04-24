@@ -129,8 +129,7 @@ const sizeValue = computed({
           <!-- 参数信息和提示词 -->
           <div class="space-y-4" :class="showImage && previewData ? '' : 'lg:col-span-2'">
             <!-- 生成参数 -->
-            <div class="p-4 rounded-xl border bg-card/50"
-              style="border-color: rgba(52, 152, 219, 0.15)">
+            <div class="p-4 rounded-xl border bg-card/50" style="border-color: rgba(52, 152, 219, 0.15)">
               <h3 class="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full"
                   style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%)"></span>
@@ -138,34 +137,30 @@ const sizeValue = computed({
               </h3>
 
               <!-- 名称 - 可编辑 -->
-              <div class="flex items-center justify-between p-3 mb-2 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+              <div
+                class="flex items-center justify-between p-3 mb-2 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                 <div class="flex items-center gap-3 flex-1">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <Box class="w-3.5 h-3.5" />
                     名称
                   </span>
-                  <input
-                    v-model="formData.name"
-                    type="text"
+                  <input v-model="formData.name" type="text"
                     class="flex-1 text-sm font-medium text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -ml-1 transition-colors"
-                    placeholder="输入名称..."
-                  />
+                    placeholder="输入名称..." />
                 </div>
               </div>
 
               <!-- 模型 - 可编辑 -->
-              <div class="flex items-center justify-between p-3 mb-2 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+              <div
+                class="flex items-center justify-between p-3 mb-2 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                 <div class="flex items-center gap-3 flex-1">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <Box class="w-3.5 h-3.5" />
                     模型
                   </span>
-                  <input
-                    v-model="formData.parameters.model"
-                    type="text"
+                  <input v-model="formData.parameters.model" type="text"
                     class="flex-1 text-sm font-medium text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -ml-1 transition-colors"
-                    placeholder="输入模型..."
-                  />
+                    placeholder="输入模型..." />
                 </div>
                 <a :href="`https://civitai.com/search/models?query=${encodeURIComponent(formData.parameters.model?.split('.')[0] || '')}`"
                   target="_blank" class="text-xs text-blue-500 hover:text-blue-400 transition-colors ml-2">
@@ -176,88 +171,75 @@ const sizeValue = computed({
               <!-- 其他参数网格 -->
               <div class="grid grid-cols-3 gap-2">
                 <!-- 采样器 - 可编辑 -->
-                <div class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+                <div
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <Sliders class="w-3.5 h-3.5" />
                     采样器
                   </span>
-                  <input
-                    v-model="formData.parameters.sampler"
-                    type="text"
+                  <input v-model="formData.parameters.sampler" type="text"
                     class="text-sm font-medium text-foreground bg-transparent border-none outline-none text-right w-20 placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -mr-1 transition-colors"
-                    placeholder="-"
-                  />
+                    placeholder="-" />
                 </div>
 
                 <!-- 调度器 - 可编辑 -->
-                <div class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+                <div
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <Sliders class="w-3.5 h-3.5" />
                     调度器
                   </span>
-                  <input
-                    v-model="formData.parameters.scheduler"
-                    type="text"
+                  <input v-model="formData.parameters.scheduler" type="text"
                     class="text-sm font-medium text-foreground bg-transparent border-none outline-none text-right w-20 placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -mr-1 transition-colors"
-                    placeholder="-"
-                  />
+                    placeholder="-" />
                 </div>
 
                 <!-- 步数 - 可编辑 -->
-                <div class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+                <div
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <Sparkles class="w-3.5 h-3.5" />
                     步数
                   </span>
-                  <input
-                    v-model.number="formData.parameters.steps"
-                    type="number"
+                  <input v-model.number="formData.parameters.steps" type="number"
                     class="text-sm font-medium text-foreground bg-transparent border-none outline-none text-right w-16 placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -mr-1 transition-colors"
-                    placeholder="-"
-                  />
+                    placeholder="-" />
                 </div>
 
                 <!-- CFG - 可编辑 -->
-                <div class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+                <div
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <Sliders class="w-3.5 h-3.5" />
                     CFG
                   </span>
-                  <input
-                    v-model.number="formData.parameters.cfg"
-                    type="number"
-                    step="0.1"
+                  <input v-model.number="formData.parameters.cfg" type="number" step="0.1"
                     class="text-sm font-medium text-foreground bg-transparent border-none outline-none text-right w-16 placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -mr-1 transition-colors"
-                    placeholder="-"
-                  />
+                    placeholder="-" />
                 </div>
 
                 <!-- 种子 - 可编辑 -->
-                <div class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+                <div
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <AlertCircle class="w-3.5 h-3.5" />
                     种子
                   </span>
-                  <input
-                    v-model.number="formData.parameters.seed"
-                    type="number"
+                  <input v-model.number="formData.parameters.seed" type="number"
                     class="text-sm font-medium text-foreground bg-transparent border-none outline-none text-right w-20 placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -mr-1 transition-colors"
-                    placeholder="-"
-                  />
+                    placeholder="-" />
                 </div>
 
                 <!-- 尺寸 - 可编辑 -->
-                <div class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
+                <div
+                  class="flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-blue-400/40 transition-colors group">
                   <span class="text-xs text-muted-foreground flex items-center gap-1.5 shrink-0">
                     <Ruler class="w-3.5 h-3.5" />
                     尺寸
                   </span>
-                  <input
-                    v-model="sizeValue"
-                    type="text"
+                  <input v-model="sizeValue" type="text"
                     class="text-sm font-medium text-foreground bg-transparent border-none outline-none text-right w-24 placeholder:text-muted-foreground/50 hover:bg-white/5 focus:bg-white/10 rounded px-1 py-0.5 -mr-1 transition-colors"
-                    placeholder="宽×高"
-                  />
+                    placeholder="宽×高" />
                 </div>
               </div>
             </div>
@@ -276,12 +258,9 @@ const sizeValue = computed({
                   {{ copiedPositive ? '已复制' : '复制' }}
                 </button>
               </div>
-              <textarea
-                v-model="formData.positive"
-                :rows="5"
-                class="w-full p-4 bg-green-500/5 border border-green-500/20 rounded-xl text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono resize-y outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/20 hover:border-green-500/30 transition-all placeholder:text-muted-foreground/40"
-                placeholder="输入正向提示词..."
-              />
+              <n-input v-model:value="formData.positive" type="textarea" :autosize="{ minRows: 4 }"
+                class="w-full block bg-green-500/5 border border-green-500/20 rounded-xl text-sm text-foreground font-mono transition-all placeholder:text-muted-foreground/40"
+                placeholder="输入正向提示词..." />
             </div>
 
             <!-- 负向提示词 - 可编辑 -->
@@ -298,26 +277,19 @@ const sizeValue = computed({
                   {{ copiedNegative ? '已复制' : '复制' }}
                 </button>
               </div>
-              <textarea
-                v-model="formData.negative"
-                :rows="4"
-                class="w-full p-4 bg-red-500/5 border border-red-500/20 rounded-xl text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono resize-y outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 hover:border-red-500/30 transition-all placeholder:text-muted-foreground/40"
-                placeholder="输入负向提示词..."
-              />
+              <n-input v-model:value="formData.negative" type="textarea" :autosize="{ minRows: 2 }"
+                class="w-full block bg-red-500/5 border border-red-500/20 rounded-xl text-sm text-foreground font-mono transition-all placeholder:text-muted-foreground/40"
+                placeholder="输入负向提示词..." />
             </div>
 
             <!-- 保存/取消按钮 -->
             <div class="flex items-center justify-end gap-3 pt-4">
-              <button
-                @click="handleCancel"
-                class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
-              >
+              <button @click="handleCancel"
+                class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted">
                 取消
               </button>
-              <button
-                @click="handleSave"
-                class="px-4 py-2 text-sm font-medium text-white bg-[#3498db] hover:bg-[#2980b9] rounded-lg transition-colors"
-              >
+              <button @click="handleSave"
+                class="px-4 py-2 text-sm font-medium text-white bg-[#3498db] hover:bg-[#2980b9] rounded-lg transition-colors">
                 保存
               </button>
             </div>
