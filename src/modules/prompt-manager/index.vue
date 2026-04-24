@@ -338,70 +338,72 @@ async function copyFullPrompt() {
     </div>
 
     <!-- 卡片网格 -->
-    <div class="flex-1 overflow-y-auto p-6">
-      <!-- 空状态 -->
-      <div v-if="filteredPrompts.length === 0"
-        class="h-full flex flex-col items-center justify-center text-muted-foreground">
-        <div class="w-20 h-20 rounded-2xl bg-[rgba(52,152,219,0.06)] flex items-center justify-center mb-5">
-          <FileText class="w-10 h-10 text-[#3498db]/30" />
+    <n-scrollbar class="flex-1">
+      <div class="p-6">
+        <!-- 空状态 -->
+        <div v-if="filteredPrompts.length === 0"
+          class="h-full flex flex-col items-center justify-center text-muted-foreground">
+          <div class="w-20 h-20 rounded-2xl bg-[rgba(52,152,219,0.06)] flex items-center justify-center mb-5">
+            <FileText class="w-10 h-10 text-[#3498db]/30" />
+          </div>
+          <p class="font-medium">
+            {{ searchQuery ? '未找到匹配的提示词' : '暂无提示词' }}
+          </p>
+          <button v-if="!searchQuery" @click="openCreateModal" class="btn-primary mt-5 flex items-center gap-2">
+            <Plus class="w-4 h-4" />
+            新建提示词
+          </button>
         </div>
-        <p class="font-medium">
-          {{ searchQuery ? '未找到匹配的提示词' : '暂无提示词' }}
-        </p>
-        <button v-if="!searchQuery" @click="openCreateModal" class="btn-primary mt-5 flex items-center gap-2">
-          <Plus class="w-4 h-4" />
-          新建提示词
-        </button>
-      </div>
 
-      <!-- 瀑布流布局 -->
-      <MasonryWall v-else :items="filteredPrompts" :column-width="220" :gap="16" :ssr-columns="1">
-        <template #default="{ item: prompt }">
-          <div
-            class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]">
-            <!-- 图片区域 -->
-            <div class="bg-muted/50 relative overflow-hidden" @click="openDetailModal(prompt)">
-              <img v-if="prompt.previewData" :src="prompt.previewData" :alt="prompt.name"
-                class="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105" />
-              <div v-else class="aspect-square flex items-center justify-center">
-                <div class="w-16 h-16 rounded-2xl bg-[rgba(52,152,219,0.08)] flex items-center justify-center">
-                  <ImageIcon class="w-8 h-8 text-[#3498db]/40" />
+        <!-- 瀑布流布局 -->
+        <MasonryWall v-else :items="filteredPrompts" :column-width="220" :gap="16" :ssr-columns="1">
+          <template #default="{ item: prompt }">
+            <div
+              class="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[rgba(52,152,219,0.3)]">
+              <!-- 图片区域 -->
+              <div class="bg-muted/50 relative overflow-hidden" @click="openDetailModal(prompt)">
+                <img v-if="prompt.previewData" :src="prompt.previewData" :alt="prompt.name"
+                  class="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div v-else class="aspect-square flex items-center justify-center">
+                  <div class="w-16 h-16 rounded-2xl bg-[rgba(52,152,219,0.08)] flex items-center justify-center">
+                    <ImageIcon class="w-8 h-8 text-[#3498db]/40" />
+                  </div>
                 </div>
-              </div>
 
-              <!-- Hover 遮罩层 - 顶部信息 -->
-              <div class="absolute inset-x-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div class="flex items-center justify-between bg-black/40  px-3 py-2">
-                  <span class="text-sm text-white/90">
-                    {{ formatDate(prompt.updatedAt) }}
-                  </span>
-                  <span v-if="prompt.source === 'parsed'"
-                    class="px-2 py-0.5 rounded-md text-sm font-semibold text-white bg-[#3498db]">
-                    魔法
-                  </span>
-                  <span v-else class="px-2 py-0.5 rounded-md text-sm font-semibold text-white bg-[#f368e0]">
-                    手动
-                  </span>
+                <!-- Hover 遮罩层 - 顶部信息 -->
+                <div class="absolute inset-x-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div class="flex items-center justify-between bg-black/40  px-3 py-2">
+                    <span class="text-sm text-white/90">
+                      {{ formatDate(prompt.updatedAt) }}
+                    </span>
+                    <span v-if="prompt.source === 'parsed'"
+                      class="px-2 py-0.5 rounded-md text-sm font-semibold text-white bg-[#3498db]">
+                      魔法
+                    </span>
+                    <span v-else class="px-2 py-0.5 rounded-md text-sm font-semibold text-white bg-[#f368e0]">
+                      手动
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <!-- Hover 遮罩层 - 底部信息 -->
-              <div
-                class="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div class="flex items-center justify-between gap-2 bg-black/40 px-3 py-2">
-                  <h3 class="font-medium text-white text-sm truncate flex-1" :title="prompt.name">
-                    {{ prompt.name }}
-                  </h3>
-                  <button @click.stop="deletePrompt(prompt.id)"
-                    class="w-7 h-7 bg-white text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center flex-shrink-0">
-                    <Trash2 class="w-3.5 h-3.5" />
-                  </button>
+                <!-- Hover 遮罩层 - 底部信息 -->
+                <div
+                  class="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div class="flex items-center justify-between gap-2 bg-black/40 px-3 py-2">
+                    <h3 class="font-medium text-white text-sm truncate flex-1" :title="prompt.name">
+                      {{ prompt.name }}
+                    </h3>
+                    <button @click.stop="deletePrompt(prompt.id)"
+                      class="w-7 h-7 bg-white text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center flex-shrink-0">
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </template>
-      </MasonryWall>
-    </div>
+          </template>
+        </MasonryWall>
+      </div>
+    </n-scrollbar>
 
     <!-- 详情弹窗 -->
     <n-modal v-model:show="showDetailModal" preset="card" style="width: 900px; max-width: 95vw" :mask-closable="true"
@@ -427,13 +429,13 @@ async function copyFullPrompt() {
       </template>
 
       <!-- 弹窗内容 -->
-      <div class="max-h-[70vh] overflow-y-auto">
+      <n-scrollbar style="max-height: 70vh">
         <PromptDetailForm v-if="selectedPrompt" :name="selectedPrompt.name" :positive="selectedPrompt.positive"
           :negative="selectedPrompt.negative" :parameters="selectedPrompt.parameters"
           :preview-data="selectedPrompt.previewData" :show-image="false" :show-actions="true" :show-delete="true"
           @copy="handleCopy" @delete="deletePrompt(selectedPrompt.id)" @save="handleSaveFromDetail"
           @cancel="closeDetailModal" />
-      </div>
+      </n-scrollbar>
     </n-modal>
 
     <!-- 新建弹窗 -->
@@ -495,7 +497,8 @@ async function copyFullPrompt() {
         </div>
 
         <!-- 右侧: 表单内容 -->
-        <div class="flex-1 min-w-0 max-h-[60vh] overflow-y-auto pr-1 space-y-5">
+        <n-scrollbar class="flex-1 min-w-0" style="max-height: 60vh">
+          <div class="pr-1 space-y-5">
           <!-- 名称 -->
           <div>
             <label class="block text-sm font-medium text-foreground mb-2">
@@ -528,7 +531,7 @@ async function copyFullPrompt() {
             <textarea v-model="editForm.negative" :rows="4" placeholder="输入负面提示词..."
               class="prompt-textarea prompt-textarea--negative" />
           </div>
-        </div>
+        </n-scrollbar>
       </div>
 
 

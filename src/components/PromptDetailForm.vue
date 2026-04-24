@@ -112,10 +112,10 @@ const sizeValue = computed({
 </script>
 
 <template>
-  <div class="h-full min-h-[800px] flex flex-col overflow-y-auto">
+  <div class="h-full min-h-[800px] flex flex-col">
     <!-- 内容区 -->
     <div class="flex-1 p-6">
-      <div class="w-full space-y-6 overflow-y-auto">
+      <div class="w-full space-y-6">
         <!-- 图片和信息 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- 图片预览 -->

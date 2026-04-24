@@ -98,6 +98,12 @@ export const themeOverrides: GlobalThemeOverrides = {
       },
     },
   },
+
+  // Scrollbar 滚动条样式覆盖
+  Scrollbar: {
+    color: '#cbd5e1',
+    colorHover: '#94a3b8',
+  },
 }
 
 // 暗色模式主题覆盖
@@ -135,5 +141,11 @@ export const darkThemeOverrides: GlobalThemeOverrides = {
   Card: {
     color: '#1e293b',
     colorModal: '#1e293b',
+  },
+
+  // Scrollbar 滚动条样式覆盖 - 暗色模式
+  Scrollbar: {
+    color: '#475569',
+    colorHover: '#64748b',
   },
 }

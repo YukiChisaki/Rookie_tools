@@ -61,10 +61,10 @@ async function copyFull() {
 </script>
 
 <template>
-  <div class="h-full min-h-[800px] flex flex-col overflow-y-auto">
+  <div class="h-full min-h-[800px] flex flex-col">
     <!-- 内容区 -->
     <div class="flex-1 p-6">
-      <div class="w-full space-y-6 overflow-y-auto">
+      <div class="w-full space-y-6">
         <!-- 图片和信息 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- 图片预览 -->
@@ -181,6 +181,7 @@ async function copyFull() {
             </div>
 
             <!-- 正向提示词 -->
+            <!-- 正向提示词 -->
             <div v-if="positive" class="space-y-2">
               <div class="flex items-center justify-between">
                 <label class="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5">
@@ -194,11 +195,11 @@ async function copyFull() {
                   {{ copiedPositive ? '已复制' : '复制' }}
                 </button>
               </div>
-              <div class="p-4 bg-green-500/5 border border-green-500/20 rounded-xl max-h-[200px] overflow-y-auto">
-                <p class="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
+              <n-scrollbar class="bg-green-500/5 border border-green-500/20 rounded-xl" style="max-height: 200px">
+                <p class="p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
                   {{ positive }}
                 </p>
-              </div>
+              </n-scrollbar>
             </div>
 
             <!-- 负向提示词 -->
@@ -215,11 +216,11 @@ async function copyFull() {
                   {{ copiedNegative ? '已复制' : '复制' }}
                 </button>
               </div>
-              <div class="p-4 bg-red-500/5 border border-red-500/20 rounded-xl max-h-[150px] overflow-y-auto">
-                <p class="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
+              <n-scrollbar class="bg-red-500/5 border border-red-500/20 rounded-xl" style="max-height: 150px">
+                <p class="p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
                   {{ negative }}
                 </p>
-              </div>
+              </n-scrollbar>
             </div>
           </div>
         </div>

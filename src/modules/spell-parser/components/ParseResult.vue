@@ -67,14 +67,13 @@ function handleClose() {
     </div>
 
     <!-- 内容区 - 复用 PromptDetailViewer -->
-    <div class="flex-1 overflow-y-auto">
+    <n-scrollbar class="flex-1">
       <PromptDetailViewer :name="image.fileName" :positive="image.positivePrompt" :negative="image.negativePrompt"
         :parameters="image.parameters" :preview-data="image.previewData" :show-image="true" :show-actions="true"
         @copy="handleCopy" />
 
       <!-- 完整元数据 -->
       <MetadataViewer :metadata="image.rawMetadata" />
-
-    </div>
+    </n-scrollbar>
   </div>
 </template>

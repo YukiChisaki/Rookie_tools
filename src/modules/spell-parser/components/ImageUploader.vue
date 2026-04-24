@@ -105,17 +105,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    class="relative h-full flex flex-col items-center justify-center p-8"
-    @drop="handleDrop"
-    @dragover="handleDragOver"
-    @dragleave="handleDragLeave"
-  >
+  <div class="relative h-full flex flex-col items-center justify-center p-8" @drop="handleDrop"
+    @dragover="handleDragOver" @dragleave="handleDragLeave">
     <!-- 全局拖拽提示遮罩 -->
-    <div
-      v-if="isDragOver"
-      class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center"
-    >
+    <div v-if="isDragOver"
+      class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
       <div class="bg-card border-2 border-dashed border-primary rounded-2xl p-12 text-center shadow-lg">
         <Upload class="w-16 h-16 text-primary mx-auto mb-4" />
         <p class="text-xl font-semibold text-foreground">松开鼠标上传图片</p>
@@ -123,24 +117,15 @@ onUnmounted(() => {
     </div>
 
     <!-- 上传区域 -->
-    <div
-      @click="triggerFileInput"
-      :class="[
-        'w-full max-w-xl cursor-pointer transition-all duration-300',
-        'border-2 border-dashed rounded-2xl p-12 text-center',
-        'hover:border-primary hover:bg-primary/5',
-        isDragOver
-          ? 'border-primary bg-primary/10 scale-[1.02]'
-          : 'border-border bg-card'
-      ]"
-    >
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/*"
-        class="hidden"
-        @change="handleFileSelect"
-      />
+    <div @click="triggerFileInput" :class="[
+      'w-full max-w-xl cursor-pointer transition-all duration-300',
+      'border-2 border-dashed rounded-2xl p-12 text-center',
+      'hover:border-primary hover:bg-primary/5',
+      isDragOver
+        ? 'border-primary bg-primary/10 scale-[1.02]'
+        : 'border-border bg-card'
+    ]">
+      <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileSelect" />
 
       <div v-if="props.isLoading" class="flex flex-col items-center">
         <Loader2 class="w-16 h-16 text-primary animate-spin mb-4" />
@@ -148,14 +133,9 @@ onUnmounted(() => {
       </div>
 
       <div v-else class="flex flex-col items-center">
-        <div
-          class="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transition-colors"
-          :class="isDragOver ? 'bg-primary/20' : 'bg-primary/10'"
-        >
-          <ImageIcon
-            class="w-10 h-10 transition-colors"
-            :class="isDragOver ? 'text-primary' : 'text-primary/70'"
-          />
+        <div class="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transition-colors"
+          :class="isDragOver ? 'bg-primary/20' : 'bg-primary/10'">
+          <ImageIcon class="w-10 h-10 transition-colors" :class="isDragOver ? 'text-primary' : 'text-primary/70'" />
         </div>
 
         <h3 class="text-xl font-semibold text-foreground mb-2">
