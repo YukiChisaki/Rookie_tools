@@ -5,7 +5,7 @@
  *
  * 交互设计：点击卡片直接进入编辑弹窗（编辑=预览），无独立详情弹窗
  *
- * @author CodeBuddy
+ * @author  Chisaki@github.com/YukiChisaki
  * @since 2026-04-24 21:14:00
  */
 import { ref, computed, watch, onUnmounted } from 'vue'
@@ -211,14 +211,14 @@ function deleteChain(id: string) {
   })
 }
 
-// ============ 复制功能（基于当前编辑表单数据） ============
-
-// ============ 1. 核心格式化逻辑 (纯函数，易于单元测试) ============
-
+// ============ 复制功能 ============
 type ArtistFormatter = (names: string[]) => string
 
 const formatters: Record<'normal' | 'anima', ArtistFormatter> = {
-  normal: (names) => names.map((n) => `(artist:${n}:1)`).join(', '),
+  // TODO:
+  // 2. Anima格式：正则校验 @[画师名]，已经是Anima格式的字符就不需要额外处理，否则加上前缀@符号
+
+  normal: (names) => names.map((n) => `artist:${n}`).join(', '),
   anima: (names) => names.map((n) => `@${n}`).join(', ')
 }
 

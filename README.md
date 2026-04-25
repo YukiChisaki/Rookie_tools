@@ -97,6 +97,16 @@ rookie-tools/
 
 ## 使用指南
 
+### 环境要求
+
+| 工具        | 最低版本    | 说明                     |
+| ----------- | ----------- | ------------------------ |
+| Node.js     | ≥ 18.0.0    | 推荐 LTS 版本            |
+| npm         | ≥ 9.0.0     | 随 Node.js 一同安装      |
+| 浏览器      | Chrome / Edge / Firefox 最新版 | 需支持 IndexedDB 与 ES2020+ |
+
+> 💡 项目使用 Vite 5 + Vue 3.5 构建，需要 Node.js 18+ 以确保原生 ESM 和相关构建特性正常工作。
+
 ### 快速开始
 
 ```bash
@@ -112,9 +122,19 @@ npm run build
 
 启动后访问 `http://localhost:5173` 即可使用。
 
-### 主题切换
+### GitHub Pages 部署
 
-点击右上角的 🌙/☀️ 按钮可在深色/浅色主题之间切换，主题偏好会自动保存。
+项目已配置 GitHub Actions 自动部署工作流，推送代码到 `master` 分支即可自动构建并发布到 GitHub Pages。
+
+**首次使用需手动启用 GitHub Pages：**
+
+1. 进入 GitHub 仓库 → **Settings** → **Pages**
+2. **Source** 选择 **GitHub Actions**
+3. 之后每次推送 `master` 分支，Actions 会自动构建并部署
+
+**手动触发部署：** 在仓库的 **Actions** 页面选择 `Deploy to GitHub Pages` 工作流，点击 **Run workflow**。
+
+部署完成后访问：`https://yukichisaki.github.io/Rookie_tools/`
 
 ### 数据说明
 

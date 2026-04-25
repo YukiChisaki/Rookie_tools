@@ -7,6 +7,8 @@ import { resolve } from "node:path";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
+  // GitHub Pages 部署需要设置仓库名作为 base 路径
+  base: mode === "production" ? "/Rookie_tools/" : "/",
   plugins: [
     vue(),
     // 按需自动导入 naive-ui 组件
