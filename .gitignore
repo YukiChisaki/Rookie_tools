@@ -11,7 +11,7 @@ node_modules
 dist
 dist-ssr
 spell/*
-.codebuddy/*
+.codebuddy
 *.local
 
 # Editor directories and files
