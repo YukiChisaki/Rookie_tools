@@ -20,6 +20,10 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# 全局环境变量：强制 GitHub Actions 使用 Node.js 24 运行，消除 Node 20 弃用警告
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +34,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
