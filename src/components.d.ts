@@ -15,6 +15,7 @@ declare module 'vue' {
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NDynamicTags: typeof import('naive-ui')['NDynamicTags']
+    NEmpty: typeof import('naive-ui')['NEmpty']
     NInput: typeof import('naive-ui')['NInput']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NModal: typeof import('naive-ui')['NModal']

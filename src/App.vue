@@ -120,8 +120,8 @@ onMounted(async () => {
             <!-- Main Content -->
             <main class="flex-1 overflow-hidden bg-background">
               <Transition name="fade" mode="out-in">
-                <!-- <TagSelector v-if="currentModule === 'tags'" key="tags" /> -->
-                <SpellParser v-if="currentModule === 'spell'" key="spell" />
+                <TagSelector v-if="currentModule === 'tags'" key="tags" />
+                <SpellParser v-else-if="currentModule === 'spell'" key="spell" />
                 <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
                 <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
               </Transition>
