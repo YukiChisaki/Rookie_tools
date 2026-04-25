@@ -430,6 +430,7 @@ async function copyFullPrompt() {
 
       <!-- 弹窗内容 -->
       <n-scrollbar style="max-height: 70vh">
+        <!-- TODO:图片标签crud与点击复制 -->
         <PromptDetailForm v-if="selectedPrompt" :name="selectedPrompt.name" :positive="selectedPrompt.positive"
           :negative="selectedPrompt.negative" :parameters="selectedPrompt.parameters"
           :preview-data="selectedPrompt.previewData" :show-image="false" :show-actions="true" :show-delete="true"

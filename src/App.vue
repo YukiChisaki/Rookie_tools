@@ -6,7 +6,8 @@ import {
   Palette,
   Sun,
   Moon,
-  Sparkles
+  Sparkles,
+  Github
 } from 'lucide-vue-next'
 import { darkTheme } from 'naive-ui'
 import type { GlobalTheme } from 'naive-ui'
@@ -93,13 +94,20 @@ onMounted(async () => {
                 <h1 class="text-foreground font-bold text-lg leading-tight tracking-tight">Rookie Tools</h1>
               </div>
             </div>
+            <div class="flex gap-5">
+              <a href="https://github.com/YukiChisaki/Rookie_tools" target="_blank" rel="noopener noreferrer"
+                class="mt-1 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                title="GitHub 项目地址">
+                <Github class="w-5 h-5" />
+              </a>
+              <!-- Theme Toggle Button -->
+              <button @click="toggleTheme"
+                class="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                :title="isDark ? '浅色模式' : '深色模式'">
+                <component :is="themeIcon" class="w-[18px] h-[18px]" />
+              </button>
+            </div>
 
-            <!-- Theme Toggle Button -->
-            <button @click="toggleTheme"
-              class="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
-              :title="isDark ? '浅色模式' : '深色模式'">
-              <component :is="themeIcon" class="w-[18px] h-[18px]" />
-            </button>
           </header>
 
           <!-- Main Content Area -->
@@ -115,6 +123,25 @@ onMounted(async () => {
                   <span class="aside-nav-label">{{ mod.label }}</span>
                 </button>
               </nav>
+
+              <!-- 开发者信息与 GitHub 链接 -->
+              <div class="mt-auto mx-3 pt-3 border-t border-border/40">
+                <div class="flex items-center justify-center gap-1 py-2">
+                  <span class="text-xs text-muted-foreground/70 font-medium tracking-wide">2026</span>
+                  <span class="text-xs text-muted-foreground/50">©</span>
+                  <a href="https://github.com/YukiChisaki" target="_blank" rel="noopener noreferrer"
+                    class="text-xs font-medium text-muted-foreground/70 hover:text-primary transition-colors duration-200">
+                    Chisaki
+                  </a>
+                </div>
+                <!-- GitHub 项目链接 -->
+                <a href="https://github.com/YukiChisaki/Rookie_tools" target="_blank" rel="noopener noreferrer"
+                  class="group flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs text-muted-foreground/50 hover:text-primary hover:bg-primary/5 transition-all duration-200"
+                  title="GitHub 项目地址">
+                  <Github class="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
+                  <span class="hidden lg:inline">GitHub</span>
+                </a>
+              </div>
             </aside>
 
             <!-- Main Content -->

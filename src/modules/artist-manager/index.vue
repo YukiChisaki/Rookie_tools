@@ -382,7 +382,8 @@ function formatDate(timestamp: number): string {
       <div class="flex items-center gap-3 flex-1">
         <div class="relative flex-1">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input v-model="searchQuery" type="text" placeholder="搜索配方..." class="input-field pl-10 text-sm w-full" />
+          <input v-model="searchQuery" type="text" placeholder="搜索配方、画师或标签..."
+            class="input-field pl-10 text-sm w-full" />
         </div>
         <button @click="openCreateModal" class="btn-primary text-sm flex items-center gap-2 shrink-0">
           <Plus class="w-4 h-4" />
@@ -618,47 +619,6 @@ function formatDate(timestamp: number): string {
                 </div>
                 <p v-else class="text-xs text-muted-foreground/50 italic">暂无标签，请在上方输入</p>
               </div>
-
-              <!-- 画师 Tag 展示 + 复制按钮 -->
-              <div v-if="!isCreating && editForm.id"
-                class="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-xl p-4 space-y-3 border border-[--secondary]">
-                <div class="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Copy class="w-4 h-4 text-primary" />
-                  配方复制
-                </div>
-                <div class="flex items-center gap-2.5 flex-wrap">
-                  <n-popover trigger="hover" placement="bottom" :show-arrow="false">
-                    <template #trigger>
-                      <button @click="copyNormalFormat"
-                        class="btn-primary !py-2 !px-4 text-sm flex items-center gap-1 font-medium shadow-lg shadow-primary/20 hover:!bg-white hover:!text-primary hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200">
-                        <Parentheses class="w-4 h-4" />
-                        {{ normalCopyBtn.text }}
-                      </button>
-                    </template>
-                    <div class="max-w-[280px] text-xs leading-relaxed">
-                      <p class="text-muted-foreground mb-1">配方预览：</p>
-                      <p class="font-mono text-foreground break-all bg-muted/60 rounded-md px-2 py-1.5">{{
-                        normalCopyPreview
-                      }}</p>
-                    </div>
-                  </n-popover>
-                  <n-popover trigger="hover" placement="bottom" :show-arrow="false">
-                    <template #trigger>
-                      <button @click="copyAnimaFormat"
-                        class="!py-2 !px-4 text-sm flex items-center gap-1 font-medium rounded-xl bg-pink-500 text-white hover:bg-white hover:text-pink-500 transition-all duration-200 hover:-translate-y-0.5">
-                        <AtSign class="w-4 h-4" />
-                        {{ animaCopyBtn.text }}
-                      </button>
-                    </template>
-                    <div class="max-w-[280px] text-xs leading-relaxed">
-                      <p class="text-muted-foreground mb-1">配方预览：</p>
-                      <p class="font-mono text-foreground break-all bg-muted/60 rounded-md px-2 py-1.5">{{
-                        animaCopyPreview
-                      }}</p>
-                    </div>
-                  </n-popover>
-                </div>
-              </div>
             </div>
           </n-scrollbar>
         </div>
@@ -678,9 +638,46 @@ function formatDate(timestamp: number): string {
 
           <!-- 右侧：取消 + 保存 -->
           <div class="flex items-center gap-3">
-            <n-button size="large" round @click="closeEditModal" class="!px-6 font-medium hover:!bg-muted">
-              取消
-            </n-button>
+            <!-- 画师 Tag 展示 + 复制按钮 -->
+            <div v-if="!isCreating && editForm.id"
+              class="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-xl p-4 space-y-3 border border-[--secondary]">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <div class="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Copy class="w-4 h-4 text-primary" />
+                  配方复制
+                </div>
+                <n-popover trigger="hover" placement="bottom" :show-arrow="false">
+                  <template #trigger>
+                    <button @click="copyNormalFormat"
+                      class="btn-primary !py-2 !px-4 text-sm flex items-center gap-1 font-medium shadow-lg shadow-primary/20 hover:!bg-white hover:!text-primary hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200">
+                      <Parentheses class="w-4 h-4" />
+                      {{ normalCopyBtn.text }}
+                    </button>
+                  </template>
+                  <div class="max-w-[280px] text-xs leading-relaxed">
+                    <p class="text-muted-foreground mb-1">配方预览：</p>
+                    <p class="font-mono text-foreground break-all bg-muted/60 rounded-md px-2 py-1.5">{{
+                      normalCopyPreview
+                    }}</p>
+                  </div>
+                </n-popover>
+                <n-popover trigger="hover" placement="bottom" :show-arrow="false">
+                  <template #trigger>
+                    <button @click="copyAnimaFormat"
+                      class="!py-2 !px-4 text-sm flex items-center gap-1 font-medium rounded-xl bg-pink-500 text-white hover:bg-white hover:text-pink-500 transition-all duration-200 hover:-translate-y-0.5">
+                      <AtSign class="w-4 h-4" />
+                      {{ animaCopyBtn.text }}
+                    </button>
+                  </template>
+                  <div class="max-w-[280px] text-xs leading-relaxed">
+                    <p class="text-muted-foreground mb-1">配方预览：</p>
+                    <p class="font-mono text-foreground break-all bg-muted/60 rounded-md px-2 py-1.5">{{
+                      animaCopyPreview
+                    }}</p>
+                  </div>
+                </n-popover>
+              </div>
+            </div>
             <n-button size="large" round type="primary" @click="saveChain"
               class="!px-8 font-semibold shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-0.5 transition-all duration-200">
               {{ isCreating ? '新 建' : '保 存' }}

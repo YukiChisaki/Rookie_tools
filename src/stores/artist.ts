@@ -24,16 +24,33 @@ export const useArtistStore = defineStore('artist', () => {
     return [...artistChains.value].sort((a, b) => b.updatedAt - a.updatedAt);
   });
 
-  /** 按 searchQuery 过滤后的画师串列表（匹配名称或画师名） */
+  /** 
+   * 超级模糊搜索：按 searchQuery 过滤画师串列表
+   * 支持搜索：配方名称、画师名、卡片标签
+   * 支持空格分词：多关键词 AND 语义（每个关键词必须命中至少一个字段）
+   */
   const filteredChains = computed(() => {
     if (!searchQuery.value.trim()) return sortedChains.value;
 
-    const query = searchQuery.value.toLowerCase();
-    return sortedChains.value.filter(
-      (chain) =>
-        chain.name.toLowerCase().includes(query) ||
-        chain.artistNames.some((name) => name.toLowerCase().includes(query))
-    );
+    // 按空格拆分多个关键词，过滤空值
+    const keywords = searchQuery.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    if (keywords.length === 0) return sortedChains.value;
+
+    return sortedChains.value.filter((chain) => {
+      // 每个关键词都必须命中至少一个字段（AND 语义）
+      return keywords.every((kw) => {
+        // 1. 搜索配方名称
+        if (chain.name.toLowerCase().includes(kw)) return true;
+
+        // 2. 搜索画师名
+        if (chain.artistNames.some((name) => name.toLowerCase().includes(kw))) return true;
+
+        // 3. 搜索卡片标签（tags）
+        if (chain.tags?.some((tag) => tag.toLowerCase().includes(kw))) return true;
+
+        return false;
+      });
+    });
   });
 
   /** 根据 ID 获取单个画师串 */
