@@ -13,6 +13,7 @@ dist-ssr
 spell/*
 .codebuddy
 *.local
+dev-dist/*
 
 # Editor directories and files
 .vscode/*
