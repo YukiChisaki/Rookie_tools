@@ -203,6 +203,50 @@ npm run build
 
 ---
 
+## 🚀 版本发布
+
+> 本项目已配置 GitHub Actions 自动化发布流程，支持一键创建正式版或预发布版本。
+
+### 发布流程
+
+```bash
+# 方式一：使用 npm scripts（推荐）
+# 升级修订号 (0.2.0 → 0.2.1)
+npm run release:patch
+
+# 升级次版本号 (0.2.0 → 0.3.0)
+npm run release:minor
+
+# 升级主版本号 (0.2.0 → 1.0.0)
+npm run release:major
+
+# 方式二：手动发布
+# 1. 更新 package.json 的 version 字段
+# 2. 创建 Git 标签（必须符合语义化版本格式）
+git tag v0.3.0
+git push origin master --follow-tags
+```
+
+### 工作流说明
+
+| 步骤 | 说明 |
+|------|------|
+| **触发条件** | 推送 `v*.*.*` 或 `v*.*.*-*` 格式的标签 |
+| **自动构建** | 安装依赖并执行 `npm run build` |
+| **打包产物** | 将 `dist` 目录打包为 `rookie-tools-v*.zip` |
+| **发行说明** | 从 `CHANGELOG.md` 提取或从 Git Log 自动生成 |
+| **Release 创建** | 在 GitHub Releases 创建版本页面并上传打包文件 |
+
+### 获取发行包
+
+访问 [GitHub Releases](../../releases) 页面下载对应版本的 ZIP 包：
+
+1. 解压到任意目录
+2. 使用静态文件服务器运行：`npx serve dist`
+3. 或直接用浏览器打开 `index.html`
+
+---
+
 ## 使用建议
 
 1. **日常使用**：先在「魔法解析」中解析 AI 生成图，一键导入到「瀑布画廊」永久保存
@@ -212,4 +256,4 @@ npm run build
 
 ---
 
-_最后更新：2026-04-26 20:50_
+_最后更新：2026-04-26 22:50_

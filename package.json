@@ -1,12 +1,15 @@
 {
   "name": "rookie_tools",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release:major": "npm version major && git push origin master --follow-tags",
+    "release:minor": "npm version minor && git push origin master --follow-tags",
+    "release:patch": "npm version patch && git push origin master --follow-tags"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^3.3.0",

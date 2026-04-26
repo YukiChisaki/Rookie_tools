@@ -6,7 +6,54 @@
 
 ## 2026-04-26
 
-### [TUTORIAL-001] 使用教程模块重构 — 从弹窗改为独立界面
+### [RELEASE-001] GitHub 自动版本发布 — CI/CD 工作流与发行说明生成
+
+**类型**: 基础设施 (Infrastructure)
+
+**变更内容**:
+
+| 模块 | 变更项 | 详情 |
+|------|--------|------|
+| **工作流** | `.github/workflows/release.yml` | **新建**: GitHub Actions 自动发布工作流，支持版本标签触发自动构建、打包、创建 Release 并上传资产 |
+| **脚本配置** | `package.json` | 新增 3 个发布命令：`release:major`/`release:minor`/`release:patch`，一键升级版本号并推送标签触发发布流程 |
+| **项目文档** | `README.md` | 新增「🚀 版本发布」章节：包含发布流程、工作流说明和获取发行包指南 |
+
+**技术实现**:
+
+- **触发机制**: 监听符合语义化版本的 Git 标签（`v*.*.*` 正式版 / `v*.*.*-*` 预发布版）
+- **构建流程**: Checkout 完整历史 → 安装依赖 → 生产构建 → 打包 dist 为 ZIP 文件
+- **发行说明生成**:
+  - **优先级 1**: 从 `docs/CHANGELOG.md` 提取当前版本的变更记录
+  - **优先级 2**: 使用 Git Log 生成差异对比（基于上一个 tag）
+  - **兜底方案**: 显示最近 10 条提交记录
+- **Release 创建**: 使用 `softprops/action-gh-release@v2` 创建 Release 页面，自动上传 ZIP 包
+- **预发布支持**: 自动识别带连字符的版本号（如 v0.3.0-beta.1），标记为 Pre-release
+
+**使用方式**:
+
+```bash
+# 升级修订号 (0.2.0 → 0.2.1)
+npm run release:patch
+
+# 升级次版本号 (0.2.0 → 0.3.0)
+npm run release:minor
+
+# 升级主版本号 (0.2.0 → 1.0.0)
+npm run release:major
+```
+
+**输出产物**:
+
+- GitHub Release 页面（含自动生成的发行说明）
+- `rookie-tools-v*.zip` 打包文件（包含完整的 dist 目录）
+
+**影响范围**:
+
+- 开发者可通过简单的 npm 命令完成版本发布，无需手动操作 GitHub 界面
+- 用户可从 Releases 页面下载离线使用的打包版本
+- 支持正式版和预发布版的区分管理
+
+---
 
 **类型**: 重构 (Refactoring)
 

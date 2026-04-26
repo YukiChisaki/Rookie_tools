@@ -1,0 +1,239 @@
+# @author Chisaki (ID: 68142319)
+# @since 2026-04-26 22:50:00
+# GitHub Actions 工作流：自动构建并发布版本到 GitHub Releases
+
+name: Release
+
+# 当推送符合语义化版本格式的 tag 时触发（如 v0.3.0, v1.0.0-beta.1）
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"           # 正式版本：v1.0.0
+      - "v[0-9]+.[0-9]+.[0-9]+-[a-z]+"     # 预发布版本：v1.0.0-beta
+      - "v[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+" # 预发布带序号：v1.0.0-beta.1
+
+# 权限配置：需要写入 contents 以创建 Release 和上传 Assets
+permissions:
+  contents: write
+
+# 全局环境变量
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: "22"
+
+jobs:
+  # ==================== 构建任务 ====================
+  build:
+    name: Build Release Package
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+
+    steps:
+      # 检出代码（包含完整的 git 历史用于生成 Changelog）
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史，用于生成 changelog
+
+      # 提取版本号和预发布标识
+      - name: Extract version info
+        id: version
+        run: |
+          # 从 tag 名称中提取版本号（去除 v 前缀）
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          
+          # 判断是否为预发布版本（包含连字符则为 prerelease）
+          if [[ "$VERSION" == *-* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          
+          echo "📦 版本信息: v$VERSION"
+
+      # 设置 Node.js 环境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # 安装依赖（使用 ci 确保与 lockfile 一致）
+      - name: Install dependencies
+        run: npm ci
+
+      # 构建生产版本
+      - name: Build project
+        run: npm run build
+
+      # 将 dist 目录打包为 zip（文件名格式：rookie-tools-v0.3.0.zip）
+      - name: Package distribution files
+        run: |
+          cd dist
+          zip -r ../rookie-tools-v${{ steps.version.outputs.version }}.zip .
+          cd ..
+          ls -lh rookie-tools-*.zip
+
+      # 上传构建产物供后续发布 Job 使用
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: rookie-tools-*.zip
+          retention-days: 7
+
+      # 从 CHANGELOG.md 提取当前版本的发行说明
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CHANGELOG_FILE="docs/CHANGELOG.md"
+          
+          # 尝试从 CHANGELOG 提取内容
+          if [ -f "$CHANGELOG_FILE" ]; then
+            echo "📝 从 CHANGELOG.md 提取发行说明..."
+            
+            # 提取最近的变更记录（两个 ## 标题之间的内容）
+            # 使用 awk 或 sed 提取第一个版本块的内容
+            NOTES=$(awk -v ver="$VERSION" '
+              /^## [0-9]{4}-/ {
+                if (found) exit
+                found=1
+              }
+              found { print }
+            ' "$CHANGELOG_FILE")
+            
+            # 如果提取到内容则使用，否则回退到 git log
+            if [ -n "$NOTES" ]; then
+              {
+                echo "notes<<EOF"
+                echo "$NOTES"
+                echo "EOF"
+              } >> "$GITHUB_OUTPUT"
+              echo "✅ 成功提取 CHANGELOG 内容"
+            else
+              echo "⚠️ CHANGELOG 未找到匹配内容，将使用 Git Log"
+              {
+                echo "notes<<EOF"
+                echo ""
+                echo "EOF"
+              } >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "⚠️ CHANGELOG.md 不存在，将使用 Git Log"
+            {
+              echo "notes<<EOF"
+              echo ""
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      # 备选方案：如果 CHANGELOG 提取失败，使用 git log 生成说明
+      - name: Generate fallback notes from git log
+        if: steps.release_notes.outputs.notes == ''
+        id: fallback_notes
+        run: |
+          echo "📝 从 Git Log 生成发行说明..."
+          
+          # 获取上一个 tag 用于生成差异对比
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "🔍 对比范围: $PREVIOUS_TAG → ${{ github.ref_name }}"
+            {
+              echo "notes<<EOF"
+              echo "## 📦 Rookie Tools v${{ steps.version.outputs.version }}"
+              echo ""
+              echo "### 变更内容"
+              echo ""
+              echo "\`\`\`"
+              git log --pretty=format:"- %s (%h)" ${PREVIOUS_TAG}..HEAD
+              echo "\`\`\`"
+              echo ""
+              echo "---"
+              echo ""
+              echo "**完整变更日志**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ github.ref_name }}"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️ 未找到上一个 tag，显示最近提交"
+            {
+              echo "notes<<EOF"
+              echo "## 📦 Rookie Tools v${{ steps.version.outputs.version }}"
+              echo ""
+              echo "### 变更内容"
+              echo ""
+              echo "\`\`\`"
+              git log --pretty=format:"- %s (%h)" -10
+              echo "\`\`\`"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+  # ==================== 发布任务 ====================
+  publish:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      # 下载构建产物
+      - name: Download release package
+        uses: actions/download-artifact@v4
+        with:
+          name: release-package
+
+      # 合并发行说明（优先使用 CHANGELOG，否则使用 Git Log）
+      - name: Merge release notes
+        id: final_notes
+        run: |
+          if [ -n "${{ needs.build.outputs.release_notes }}" ]; then
+            echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+            echo "${{ needs.build.outputs.release_notes }}" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          else
+            # 如果没有提取到 CHANGELOG，使用简单的默认模板
+            {
+              echo "notes<<EOF"
+              echo "## 📦 Rookie Tools v${{ needs.build.outputs.version }}"
+              echo ""
+              echo "### 🎉 更新内容"
+              echo ""
+              echo "请查看 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/docs/CHANGELOG.md) 了解详细变更记录。"
+              echo ""
+              echo "---"
+              echo ""
+              echo "**快速开始**:"
+              echo "1. 下载 \`rookie-tools-v${{ needs.build.outputs.version }}.zip\`"
+              echo "2. 解压到任意目录"
+              echo "3. 使用任意静态文件服务器运行（如 \`npx serve dist\`）"
+              echo "4. 或直接在浏览器中打开 \`index.html\`"
+              echo ""
+              echo "> 💡 本项目为纯前端应用，无需后端服务器，所有数据存储在本地浏览器。"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      # 创建 GitHub Release 并上传资产
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: 📦 Release v${{ needs.build.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ fromJSON(needs.build.outputs.is_prerelease) }}
+          files: rookie-tools-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 输出发布结果
+      - name: Release summary
+        run: |
+          echo "✅ Release 创建成功！"
+          echo ""
+          echo "📍 Release 地址: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          echo "📦 版本号: v${{ needs.build.outputs.version }}"
+          echo "🏷️ 类型: $([ "${{ needs.build.outputs.is_prerelease }}" = "true" ] && echo "预发布 (Pre-release)" || echo "正式版 (Stable)")"
