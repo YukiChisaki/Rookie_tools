@@ -8,9 +8,8 @@ import { resolve } from "node:path";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // 根据模式确定基础路径
-  const isProd = mode === "production";
-  const base = isProd ? "/Rookie_tools/" : "/";
+  // 使用相对路径，确保本地测试和任意部署路径都能正常工作
+  const base = "./";
 
   return {
     // GitHub Pages 部署需要设置仓库名作为 base 路径
