@@ -6,6 +6,42 @@
 
 ## 2026-04-26
 
+### [PWA-001] PWA 离线支持 — 应用可安装与离线访问
+
+**类型**: 新功能 (New Feature)
+
+**变更内容**:
+
+| 模块 | 变更项 | 详情 |
+|------|--------|------|
+| **依赖** | `package.json` | 新增 `vite-plugin-pwa` 开发依赖 (v1.2.0) |
+| **构建配置** | `vite.config.ts` | 集成 VitePWA 插件，配置 manifest / workbox / autoUpdate |
+| **静态资源** | `public/pwa-192x192.png` | 新增 PWA 图标 192×192（蓝紫渐变 R Logo） |
+| **静态资源** | `public/pwa-512x512.png` | 新增 PWA 图标 512×512（蓝紫渐变 R Logo） |
+| **HTML** | `index.html` | 添加 manifest 链接、apple-mobile-web-app 系列 meta 标签，修正 theme-color 为 #3498db |
+| **类型声明** | `src/vite-env.d.ts` | 添加 `virtual:pwa-register` 模块类型声明 |
+| **组合函数** | `src/composables/usePwa.ts` | 新增 PWA 状态管理组合函数（canInstall / needUpdate / installApp / updateApp） |
+| **根组件** | `src/App.vue` | 集成 PWA 安装按钮（Download 图标）+ 更新通知条；移除已废弃的 useTagLoader 引用 |
+| **应用入口** | `src/main.ts` | 注册 Service Worker（仅生产环境），定期检查 SW 更新 |
+
+**技术实现**:
+
+- 使用 `vite-plugin-pwa` + Workbox `GenerateSW` 策略，自动生成 Service Worker 并预缓存全部静态资源
+- manifest 配置 `display: standalone`，安装后以独立窗口运行（无浏览器地址栏）
+- `scope` / `start_url` 适配 GitHub Pages base 路径 `/Rookie_tools/`
+- 开发模式禁用 PWA（`devOptions.enabled: false`），避免 SW 缓存干扰 HMR
+- 安装按钮：监听 `beforeinstallprompt` 事件，触发浏览器原生安装弹窗
+- 更新通知：header 下方滑入式提示条，点击"立即刷新"加载新版本
+- SW 注册仅在 `import.meta.env.PROD` 下执行
+
+**影响范围**:
+
+- 生产构建后，应用可通过浏览器"添加到桌面/主屏幕"安装为独立应用
+- 安装后断网仍可完整使用所有功能（预缓存全部静态资源）
+- 构建产物新增 `manifest.webmanifest`、`sw.js`、`workbox-*.js`
+
+---
+
 ### [REFACTOR-001] UUID 生成方式迁移 — 原生 crypto.randomUUID() 替换为 cuid2
 
 **类型**: 重构 (Refactoring)

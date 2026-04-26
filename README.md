@@ -78,6 +78,8 @@
 | 图片解析 | ExifReader              | 读取图片 EXIF/PNG 元数据           |
 | 瀑布流   | @yeger/vue-masonry-wall | 自适应瀑布流布局                   |
 | 图标     | Lucide Vue Next         | SVG 图标库                         |
+| UUID     | cuid2                   | 生成 UUID 用于数据唯一标识         |
+| PWA      | vite-plugin-pwa         | 离线缓存、可安装、Service Worker   |
 
 ### 项目目录结构
 
@@ -92,6 +94,8 @@ rookie-tools/
 │   │   ├── PromptDetailForm.vue
 │   │   └── PromptDetailViewer.vue
 │   ├── composables/            # 组合式函数 (Composables)
+│   │   ├── usePwa.ts           # PWA 安装/更新状态管理
+│   │   └── useTagLoader.ts     # 标签自动加载
 │   ├── modules/                # 功能模块
 │   │   ├── artist-manager/     # 🎨 蜜汁配方
 │   │   ├── prompt-manager/     # 📝 瀑布画廊
@@ -165,6 +169,7 @@ npm run build
 | 快速标签   | ❌ 未开发 | ~0%    | 仅有早期 Demo，需重做          |
 | 主题切换   | ✅ 已完成 | 100%   | 深色/浅色主题同步              |
 | 本地持久化 | ✅ 已完成 | 100%   | IndexedDB 全量存储             |
+| PWA 支持   | ✅ 已完成 | 100%   | 可安装 + 离线访问 + 更新提示   |
 
 ---
 
@@ -177,4 +182,4 @@ npm run build
 
 ---
 
-_最后更新：2026-04-25_
+_最后更新：2026-04-26_

@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Rookie Tools 根组件
+ * 包含导航布局、主题切换、PWA 安装/更新功能
+ * @author Chisaki / 68142319
+ * @since 2026-04-26
+ */
 import { ref, onMounted, computed } from 'vue'
 import {
   Tags,
@@ -7,14 +13,15 @@ import {
   Sun,
   Moon,
   Sparkles,
-  Github
+  Github,
+  Download,
+  RefreshCw
 } from 'lucide-vue-next'
-import { darkTheme } from 'naive-ui'
+import { darkTheme, useMessage } from 'naive-ui'
 import type { GlobalTheme } from 'naive-ui'
-import { useTagStore } from './stores/tag'
 import { usePromptStore } from './stores/prompt'
 import { useArtistStore } from './stores/artist'
-import { useTagLoader } from './composables/useTagLoader'
+import { usePwa } from './composables/usePwa'
 import { themeOverrides, darkThemeOverrides } from './styles/naiveTheme'
 import type { ModuleType } from './types'
 
@@ -33,12 +40,17 @@ const modules = [
   { id: 'artists' as ModuleType, label: '蜜汁配方', icon: Palette },
 ]
 
-const tagStore = useTagStore()
 const promptStore = usePromptStore()
 const artistStore = useArtistStore()
 
+// PWA 安装与更新
+const { canInstall, isInstalled, needUpdate, installApp, updateApp } = usePwa()
+
 // Dark mode toggle
 const isDark = ref(false)
+
+/** 延迟初始化的 message 实例（等 <n-message-provider> 挂载后） */
+let msgInstance: ReturnType<typeof useMessage> | null = null
 
 const themeIcon = computed(() => isDark.value ? Sun : Moon)
 
@@ -46,7 +58,7 @@ const themeIcon = computed(() => isDark.value ? Sun : Moon)
 const naiveTheme = computed<GlobalTheme | null>(() => isDark.value ? darkTheme : null)
 const currentThemeOverrides = computed(() => isDark.value ? darkThemeOverrides : themeOverrides)
 
-function toggleTheme() {
+const toggleTheme = () => {
   isDark.value = !isDark.value
   if (isDark.value) {
     document.documentElement.classList.add('dark')
@@ -56,17 +68,45 @@ function toggleTheme() {
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
-// Initialize theme
+/** PWA 安装/启动按钮点击处理 */
+const handlePwaAction = async () => {
+  const result = await installApp()
+  switch (result) {
+    case 'focused':
+      // 已在 PWA 窗口中运行
+      msgInstance?.success('正在运行中...', { duration: 3000 })
+      break
+    case 'installed':
+      msgInstance?.info('应用已安装，请从桌面或任务栏启动', { duration: 3000 })
+      break
+    case 'accepted':
+      msgInstance?.success('安装请求已发送，请确认浏览器弹窗', { duration: 3000 })
+      break
+    case 'dismissed':
+      msgInstance?.warning('已取消安装', { duration: 2000 })
+      break
+    case 'unavailable':
+      msgInstance?.warning('当前环境暂不支持自动安装（可能需要 HTTPS 或非 localhost 环境）', { duration: 4000 })
+      break
+    case 'error':
+      msgInstance?.error('安装过程出错，请重试', { duration: 3000 })
+      break
+  }
+}
+
+// Initialize theme & PWA message provider
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme === 'dark') {
     isDark.value = true
     document.documentElement.classList.add('dark')
   }
-})
 
-// Auto-load tags
-useTagLoader()
+  // 延迟获取 message 实例，确保 <n-message-provider> 已渲染
+  nextTick(() => {
+    msgInstance = useMessage()
+  })
+})
 
 onMounted(async () => {
   // Load existing data
@@ -78,86 +118,111 @@ onMounted(async () => {
 </script>
 
 <template>
-  <n-config-provider :theme="naiveTheme" :theme-overrides="currentThemeOverrides">
-    <n-dialog-provider>
-      <n-message-provider>
-        <div class="h-screen w-screen bg-background flex flex-col overflow-hidden">
-          <!-- Top Header Bar -->
-          <header class="h-[64px] bg-card border-b border-border flex items-center justify-between px-6 shrink-0">
-            <!-- Logo -->
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-                style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%); box-shadow: 0 4px 14px rgba(52, 152, 219, 0.35);">
-                <span class="text-white font-bold text-xl leading-none">R</span>
-              </div>
-              <div class="flex flex-col">
-                <h1 class="text-foreground font-bold text-lg leading-tight tracking-tight">Rookie Tools</h1>
-              </div>
-            </div>
-            <div class="flex gap-5">
-              <a href="https://github.com/YukiChisaki/Rookie_tools" target="_blank" rel="noopener noreferrer"
-                class="mt-1 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
-                title="GitHub 项目地址">
-                <Github class="w-5 h-5" />
-              </a>
-              <!-- Theme Toggle Button -->
-              <button @click="toggleTheme"
-                class="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
-                :title="isDark ? '浅色模式' : '深色模式'">
-                <component :is="themeIcon" class="w-[18px] h-[18px]" />
-              </button>
-            </div>
-
-          </header>
-
-          <!-- Main Content Area -->
-          <div class="flex-1 flex overflow-hidden">
-            <!-- Left Aside Sidebar with Navigation -->
-            <aside class="w-[72px] lg:w-40 bg-card border-r border-border flex flex-col py-3 shrink-0">
-              <nav class="flex-1 flex flex-col gap-1 px-2">
-                <button v-for="mod in modules" :key="mod.id" @click="currentModule = mod.id"
-                  :class="['aside-nav-item', { active: currentModule === mod.id }]">
-                  <div class="nav-icon-wrapper">
-                    <component :is="mod.icon" class="aside-nav-icon w-[18px] h-[18px] shrink-0" />
-                  </div>
-                  <span class="aside-nav-label">{{ mod.label }}</span>
+  <div id="app">
+    <n-config-provider :theme="naiveTheme" :theme-overrides="currentThemeOverrides">
+      <n-dialog-provider>
+        <n-message-provider>
+          <div class="h-screen w-screen bg-background flex flex-col overflow-hidden">
+            <!-- PWA 更新通知条 -->
+            <Transition name="slide-down">
+              <div v-if="needUpdate"
+                class="relative z-50 flex items-center justify-center gap-3 px-6 py-2.5 bg-primary/10 border-b border-primary/20 backdrop-blur-sm">
+                <span class="text-sm font-medium text-primary">发现新版本</span>
+                <button @click="updateApp"
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-all duration-200 active:scale-95">
+                  <RefreshCw class="w-3 h-3" />
+                  立即刷新
                 </button>
-              </nav>
+              </div>
+            </Transition>
 
-              <!-- 开发者信息与 GitHub 链接 -->
-              <div class="mt-auto mx-3 pt-3 border-t border-border/40">
-                <div class="flex items-center justify-center gap-1 py-2">
-                  <span class="text-xs text-muted-foreground/70 font-medium tracking-wide">2026</span>
-                  <span class="text-xs text-muted-foreground/50">©</span>
-                  <a href="https://github.com/YukiChisaki" target="_blank" rel="noopener noreferrer"
-                    class="text-xs font-medium text-muted-foreground/70 hover:text-primary transition-colors duration-200">
-                    Chisaki
+            <!-- Top Header Bar -->
+            <header class="h-[64px] bg-card border-b border-border flex items-center justify-between px-6 shrink-0">
+              <!-- Logo -->
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style="background: linear-gradient(135deg, #3498db 0%, #f368e0 100%); box-shadow: 0 4px 14px rgba(52, 152, 219, 0.35);">
+                  <span class="text-white font-bold text-xl leading-none">R</span>
+                </div>
+                <div class="flex flex-col">
+                  <h1 class="text-foreground font-bold text-lg leading-tight tracking-tight">Rookie Tools</h1>
+                </div>
+              </div>
+              <div class="flex gap-5">
+                <a href="https://github.com/YukiChisaki/Rookie_tools" target="_blank" rel="noopener noreferrer"
+                  class="mt-1 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                  title="GitHub 项目地址">
+                  <Github class="w-5 h-5" />
+                </a>
+                <!-- PWA 安装/启动按钮 -->
+                <button v-if="canInstall" @click="handlePwaAction" :class="[
+                  'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200',
+                  isInstalled
+                    ? 'text-primary bg-primary/10 hover:bg-primary/20'
+                    : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+                ]" :title="isInstalled ? '应用已安装' : '安装应用到桌面'">
+                  <Download class="w-[18px] h-[18px]" />
+                </button>
+                <!-- Theme Toggle Button -->
+                <button @click="toggleTheme"
+                  class="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                  :title="isDark ? '浅色模式' : '深色模式'">
+                  <component :is="themeIcon" class="w-[18px] h-[18px]" />
+                </button>
+              </div>
+
+            </header>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 flex overflow-hidden">
+              <!-- Left Aside Sidebar with Navigation -->
+              <aside class="w-[72px] lg:w-40 bg-card border-r border-border flex flex-col py-3 shrink-0">
+                <nav class="flex-1 flex flex-col gap-1 px-2">
+                  <button v-for="mod in modules" :key="mod.id" @click="currentModule = mod.id"
+                    :class="['aside-nav-item', { 'nav-active': currentModule === mod.id }]">
+                    <div class="nav-icon-wrapper">
+                      <component :is="mod.icon" class="aside-nav-icon w-[18px] h-[18px] shrink-0" />
+                    </div>
+                    <span class="aside-nav-label">{{ mod.label }}</span>
+                  </button>
+                </nav>
+
+                <!-- 开发者信息与 GitHub 链接 -->
+                <div class="mt-auto mx-3 pt-3 border-t border-border/40">
+                  <div class="flex items-center justify-center gap-1 py-2">
+                    <span class="text-xs text-muted-foreground/70 font-medium tracking-wide">2026</span>
+                    <span class="text-xs text-muted-foreground/50">©</span>
+                    <a href="https://github.com/YukiChisaki" target="_blank" rel="noopener noreferrer"
+                      class="text-xs font-medium text-muted-foreground/70 hover:text-primary transition-colors duration-200">
+                      Chisaki
+                    </a>
+                  </div>
+                  <!-- GitHub 项目链接 -->
+                  <a href="https://github.com/YukiChisaki/Rookie_tools" target="_blank" rel="noopener noreferrer"
+                    class="group flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs text-muted-foreground/50 hover:text-primary hover:bg-primary/5 transition-all duration-200"
+                    title="GitHub 项目地址">
+                    <Github class="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
+                    <span class="hidden lg:inline">GitHub</span>
                   </a>
                 </div>
-                <!-- GitHub 项目链接 -->
-                <a href="https://github.com/YukiChisaki/Rookie_tools" target="_blank" rel="noopener noreferrer"
-                  class="group flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs text-muted-foreground/50 hover:text-primary hover:bg-primary/5 transition-all duration-200"
-                  title="GitHub 项目地址">
-                  <Github class="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" />
-                  <span class="hidden lg:inline">GitHub</span>
-                </a>
-              </div>
-            </aside>
+              </aside>
 
-            <!-- Main Content -->
-            <main class="flex-1 overflow-hidden bg-background">
-              <Transition name="fade" mode="out-in">
-                <TagSelector v-if="currentModule === 'tags'" key="tags" />
-                <SpellParser v-else-if="currentModule === 'spell'" key="spell" />
-                <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
-                <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
-              </Transition>
-            </main>
+              <!-- Main Content -->
+              <main class="flex-1 overflow-hidden bg-background">
+                <Transition name="fade" mode="out-in">
+                  <TagSelector v-if="currentModule === 'tags'" key="tags" />
+                  <SpellParser v-else-if="currentModule === 'spell'" key="spell" />
+                  <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
+                  <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
+                </Transition>
+              </main>
+            </div>
           </div>
-        </div>
-      </n-message-provider>
-    </n-dialog-provider>
-  </n-config-provider>
+        </n-message-provider>
+      </n-dialog-provider>
+    </n-config-provider>
+
+  </div>
 </template>
 
 <style scoped>
@@ -171,63 +236,67 @@ onMounted(async () => {
   opacity: 0;
 }
 
+/* 更新通知条滑入/滑出动画 */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
 /* Aside Navigation Styles */
 .aside-nav-item {
-  @apply flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer;
-  color: #64748b;
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer text-muted-foreground;
 }
 
 .dark .aside-nav-item {
-  color: #94a3b8;
+  @apply text-muted-foreground;
 }
 
 .aside-nav-item:hover {
-  background-color: #f1f5f9;
-  color: #1e293b;
+  @apply bg-muted text-foreground;
 }
 
 .dark .aside-nav-item:hover {
-  background-color: #334155;
-  color: #f8fafc;
+  @apply bg-muted text-foreground;
 }
 
-.aside-nav-item.active {
-  background-color: rgba(52, 152, 219, 0.1);
-  border: 1px solid rgba(52, 152, 219, 0.2);
-  color: #3498db;
+.aside-nav-item.nav-active {
+  @apply bg-primary/10 border border-primary/20 text-primary;
 }
 
-.dark .aside-nav-item.active {
-  background-color: rgba(52, 152, 219, 0.15);
-  border: 1px solid rgba(52, 152, 219, 0.3);
+.dark .aside-nav-item.nav-active {
+  @apply bg-primary/15 border border-primary/30 text-primary;
 }
 
-.aside-nav-item.active .aside-nav-label {
-  color: #3498db;
-  font-weight: 600;
+.aside-nav-item.nav-active .aside-nav-label {
+  @apply text-primary font-semibold;
 }
 
 /* Nav icon wrapper */
 .nav-icon-wrapper {
-  @apply flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-all duration-200;
-  background-color: rgba(243, 104, 224, 0.1);
+  @apply flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-all duration-200 bg-secondary/40;
 }
 
 .aside-nav-item:hover .nav-icon-wrapper {
-  background-color: rgba(243, 104, 224, 0.15);
+  @apply bg-secondary;
 }
 
-.aside-nav-item.active .nav-icon-wrapper {
-  background-color: rgba(52, 152, 219, 0.15);
+.aside-nav-item.nav-active .nav-icon-wrapper {
+  @apply bg-primary/15;
 }
 
-/* Pink icon color */
+/* Nav icon color - use accent color */
 .aside-nav-icon {
-  color: #f368e0;
+  @apply text-accent;
 }
 
-.aside-nav-item.active .aside-nav-icon {
-  color: #3498db;
+.aside-nav-item.nav-active .aside-nav-icon {
+  @apply text-primary;
 }
 
 /* Label hidden on small screens, visible on large */

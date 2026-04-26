@@ -20,13 +20,13 @@ export default {
         },
         'muted-foreground': 'var(--muted-foreground)',
         primary: {
-          DEFAULT: 'var(--primary)',
+          DEFAULT: 'rgb(var(--primary))',
           foreground: 'var(--primary-foreground)',
           light: '#60A5FA',
           dark: '#2563EB',
         },
         secondary: {
-          DEFAULT: 'var(--secondary)',
+          DEFAULT: 'rgb(var(--secondary))',
           foreground: 'var(--secondary-foreground)',
           light: '#F472B6',
           dark: '#DB2777',
@@ -40,6 +40,10 @@ export default {
           foreground: 'var(--card-foreground)',
         },
         border: 'var(--border)',
+        accent: {
+          DEFAULT: 'var(--secondary)',
+          foreground: 'var(--secondary-foreground)',
+        },
         success: '#22C55E',
         error: '#EF4444',
         warning: '#F59E0B',

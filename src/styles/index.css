@@ -10,12 +10,12 @@
     --card-foreground: #1e293b;
     --muted: #f1f5f9;
     --muted-foreground: #64748b;
-    --primary: #3498db;
+    --primary: 52, 152, 219;
     --primary-foreground: #ffffff;
-    --secondary: #f368e0;
+    --secondary: 243, 104, 224;
     --secondary-foreground: #ffffff;
     --border: #e2e8f0;
-    --ring: #3498db;
+    --ring: 52, 152, 219;
     --radius: 0.75rem;
   }
 
@@ -26,12 +26,12 @@
     --card-foreground: #f8fafc;
     --muted: #334155;
     --muted-foreground: #94a3b8;
-    --primary: #3498db;
+    --primary: 52, 152, 219;
     --primary-foreground: #ffffff;
-    --secondary: #f368e0;
+    --secondary: 243, 104, 224;
     --secondary-foreground: #ffffff;
     --border: #334155;
-    --ring: #3498db;
+    --ring: 52, 152, 219;
     --radius: 0.75rem;
   }
 
