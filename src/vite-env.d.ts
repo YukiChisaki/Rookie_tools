@@ -6,6 +6,13 @@ declare module '*.vue' {
   export default component
 }
 
+// unplugin-vue-markdown: Markdown 文件作为 Vue 组件
+declare module '*.md' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
 // vite-plugin-pwa 虚拟模块类型声明
 declare module 'virtual:pwa-register' {
   export interface RegisterSWOptions {

@@ -6,23 +6,54 @@
 
 ## 2026-04-26
 
+### [TUTORIAL-001] 使用教程模块重构 — 从弹窗改为独立界面
+
+**类型**: 重构 (Refactoring)
+
+**变更内容**:
+
+| 模块         | 变更项                            | 详情                                                                                                                              |
+| ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **依赖**     | `package.json`                    | 已安装 `unplugin-vue-markdown` (v30.0.0)                                                                                          |
+| **构建配置** | `vite.config.ts`                  | 配置 Markdown 插件，Vue 插件添加 `include: [/\.vue$/, /\.md$/]` 以支持编译 .md 文件                                              |
+| **类型声明** | `src/types/markdown.d.ts`         | 新增 `.md` 文件模块声明，导入后为 Vue 组件类型                                                                                    |
+| **核心模块** | `src/modules/tutorial/index.vue`  | **新建**: 教程模块主组件，使用独立界面展示                                                                                        |
+| **核心模块** | `src/modules/tutorial/tutorial.md`| **新建**: 教程内容 Markdown 文档                                                                                                  |
+| **根组件**   | `src/App.vue`                     | 添加 `nextTick` 导入修复；`Tutorial` 组件通过 `currentModule` 切换独立显示，不再使用弹窗                                          |
+
+**技术实现**:
+
+- 使用 `unplugin-vue-markdown` 将 Markdown 文件编译为 Vue 组件
+- 关键配置: Vue 插件必须设置 `include: [/\.vue$/, /\.md$/]` 才能正确处理 Markdown 文件
+- 教程内容使用独立 Markdown 文件维护，便于后续更新
+- Markdown 样式通过 `<style>` 块自定义，使用 Tailwind CSS 变量实现深色/浅色主题适配
+- 界面布局与其他模块保持一致：顶部 Header + 下方内容区
+
+**用户体验提升**:
+
+- 教程从弹窗改为独立界面，内容不再截断，可完整展示
+- 支持滚动浏览全部教程内容
+- 与其他功能模块保持一致的界面风格
+
+---
+
 ### [PWA-001] PWA 离线支持 — 应用可安装与离线访问
 
 **类型**: 新功能 (New Feature)
 
 **变更内容**:
 
-| 模块 | 变更项 | 详情 |
-|------|--------|------|
-| **依赖** | `package.json` | 新增 `vite-plugin-pwa` 开发依赖 (v1.2.0) |
-| **构建配置** | `vite.config.ts` | 集成 VitePWA 插件，配置 manifest / workbox / autoUpdate |
-| **静态资源** | `public/pwa-192x192.png` | 新增 PWA 图标 192×192（蓝紫渐变 R Logo） |
-| **静态资源** | `public/pwa-512x512.png` | 新增 PWA 图标 512×512（蓝紫渐变 R Logo） |
-| **HTML** | `index.html` | 添加 manifest 链接、apple-mobile-web-app 系列 meta 标签，修正 theme-color 为 #3498db |
-| **类型声明** | `src/vite-env.d.ts` | 添加 `virtual:pwa-register` 模块类型声明 |
-| **组合函数** | `src/composables/usePwa.ts` | 新增 PWA 状态管理组合函数（canInstall / needUpdate / installApp / updateApp） |
-| **根组件** | `src/App.vue` | 集成 PWA 安装按钮（Download 图标）+ 更新通知条；移除已废弃的 useTagLoader 引用 |
-| **应用入口** | `src/main.ts` | 注册 Service Worker（仅生产环境），定期检查 SW 更新 |
+| 模块         | 变更项                      | 详情                                                                                 |
+| ------------ | --------------------------- | ------------------------------------------------------------------------------------ |
+| **依赖**     | `package.json`              | 新增 `vite-plugin-pwa` 开发依赖 (v1.2.0)                                             |
+| **构建配置** | `vite.config.ts`            | 集成 VitePWA 插件，配置 manifest / workbox / autoUpdate                              |
+| **静态资源** | `public/pwa-192x192.png`    | 新增 PWA 图标 192×192（蓝紫渐变 R Logo）                                             |
+| **静态资源** | `public/pwa-512x512.png`    | 新增 PWA 图标 512×512（蓝紫渐变 R Logo）                                             |
+| **HTML**     | `index.html`                | 添加 manifest 链接、apple-mobile-web-app 系列 meta 标签，修正 theme-color 为 #3498db |
+| **类型声明** | `src/vite-env.d.ts`         | 添加 `virtual:pwa-register` 模块类型声明                                             |
+| **组合函数** | `src/composables/usePwa.ts` | 新增 PWA 状态管理组合函数（canInstall / needUpdate / installApp / updateApp）        |
+| **根组件**   | `src/App.vue`               | 集成 PWA 安装按钮（Download 图标）+ 更新通知条；移除已废弃的 useTagLoader 引用       |
+| **应用入口** | `src/main.ts`               | 注册 Service Worker（仅生产环境），定期检查 SW 更新                                  |
 
 **技术实现**:
 
@@ -48,14 +79,14 @@
 
 **变更内容**:
 
-| 模块 | 变更项 | 详情 |
-|------|--------|------|
-| **依赖** | `package.json` | 新增 `@paralleldrive/cuid2` 依赖 |
-| **工具函数** | `utils/id.ts` | 使用 `cuid2` 的 `createId()` 替代 `crypto.randomUUID()`，添加完整 JSDoc 注释 |
-| **状态管理** | `stores/tag.ts` | 导入 `generateId`，替换 2 处 `crypto.randomUUID()` 调用 |
-| **状态管理** | `stores/prompt.ts` | 导入 `generateId`，替换 2 处 `crypto.randomUUID()` 调用 |
-| **状态管理** | `stores/artist.ts` | 导入 `generateId`，替换 1 处 `crypto.randomUUID()` 调用，更新作者信息 |
-| **服务** | `services/spellParser.ts` | 导入 `generateId`，替换 1 处 `crypto.randomUUID()` 调用 |
+| 模块         | 变更项                                  | 详情                                                                           |
+| ------------ | --------------------------------------- | ------------------------------------------------------------------------------ |
+| **依赖**     | `package.json`                          | 新增 `@paralleldrive/cuid2` 依赖                                               |
+| **工具函数** | `utils/id.ts`                           | 使用 `cuid2` 的 `createId()` 替代 `crypto.randomUUID()`，添加完整 JSDoc 注释   |
+| **状态管理** | `stores/tag.ts`                         | 导入 `generateId`，替换 2 处 `crypto.randomUUID()` 调用                        |
+| **状态管理** | `stores/prompt.ts`                      | 导入 `generateId`，替换 2 处 `crypto.randomUUID()` 调用                        |
+| **状态管理** | `stores/artist.ts`                      | 导入 `generateId`，替换 1 处 `crypto.randomUUID()` 调用，更新作者信息          |
+| **服务**     | `services/spellParser.ts`               | 导入 `generateId`，替换 1 处 `crypto.randomUUID()` 调用                        |
 | **开发规范** | `.codebuddy/rules/前端项目开发规范.mdc` | 4.4 节新增 UUID 生成规范：强制使用 `cuid2`，严禁使用原生 `crypto.randomUUID()` |
 
 **技术实现**:
@@ -83,12 +114,13 @@
 
 **变更内容**:
 
-| 模块 | 变更项 | 详情 |
-|------|--------|------|
-| **文档** | `.codebuddy/项目说明文档.md` | 全面对齐最新代码状态：2.4节从「画师与串[未开发]」重写为「蜜汁配方[已完成]」；移除 useArtistLoader 引用；更新 store/模块描述；刷新功能进度表和下一步建议 |
-| **文档** | `README.md` | 更新最后更新时间戳至 2026-04-25 |
+| 模块     | 变更项                       | 详情                                                                                                                                                     |
+| -------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **文档** | `.codebuddy/项目说明文档.md` | 全面对齐最新代码状态：2.4 节从「画师与串[未开发]」重写为「蜜汁配方[已完成]」；移除 useArtistLoader 引用；更新 store/模块描述；刷新功能进度表和下一步建议 |
+| **文档** | `README.md`                  | 更新最后更新时间戳至 2026-04-25                                                                                                                          |
 
 **对齐详情**:
+
 - 模块四：画师与串 → 蜜汁配方（画师串管理），状态 ❌→✅
 - Store 描述：artist.ts 从「Artist CRUD + 收藏 + 导入」精简为「画师串 CRUD + 搜索过滤 + 旧数据迁移」
 - Composables：移除不存在的 `useArtistLoader.ts`
@@ -107,8 +139,8 @@
 
 **变更内容**:
 
-| 模块 | 变更项 | 详情 |
-|------|--------|------|
+| 模块         | 变更项                             | 详情                                                                                                                                       |
+| ------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | **核心模块** | `modules/artist-manager/index.vue` | 画师配方和卡片标签从逗号分隔文本输入改为 `n-dynamic-tags` 动态标签组件；标签类型基于索引哈希随机展示（success/info/warning/error/default） |
 
 **技术实现**:
@@ -135,19 +167,19 @@
 
 **变更内容**:
 
-| 模块 | 变更项 | 详情 |
-|------|--------|------|
-| **类型定义** | `types/index.ts` | 移除旧 `Artist` 接口，重构 `ArtistChain`：`artistIds→artistNames`，新增 `thumbnailData`/`previewData`/`updatedAt` 字段 |
-| **状态管理** | `stores/artist.ts` | 大幅精简重写：移除 Artist CRUD / 收藏/导入等全部逻辑，仅保留 ArtistChain 的 `createChain/updateChain/deleteChain/loadArtists` + `sortedChains/filteredChains/getChainById` computed；新增防御性旧数据迁移（`artistIds→[]`） |
-| **组合函数** | `composables/useArtistLoader.ts` | **完全移除**（不再需要从标签系统自动加载画师） |
-| **根组件** | `App.vue` | 移除第 17 行 `useArtistLoader` 导入和第 69 行调用 |
-| **核心模块** | `modules/artist-manager/index.vue` | **完整重写**：从空模板实现为完整的画师串管理界面 |
-| **TS 声明** | `vite-env.d.ts` | 补充 `*.vue` 模块声明以消除 TS 7016 错误 |
+| 模块         | 变更项                             | 详情                                                                                                                                                                                                                        |
+| ------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **类型定义** | `types/index.ts`                   | 移除旧 `Artist` 接口，重构 `ArtistChain`：`artistIds→artistNames`，新增 `thumbnailData`/`previewData`/`updatedAt` 字段                                                                                                      |
+| **状态管理** | `stores/artist.ts`                 | 大幅精简重写：移除 Artist CRUD / 收藏/导入等全部逻辑，仅保留 ArtistChain 的 `createChain/updateChain/deleteChain/loadArtists` + `sortedChains/filteredChains/getChainById` computed；新增防御性旧数据迁移（`artistIds→[]`） |
+| **组合函数** | `composables/useArtistLoader.ts`   | **完全移除**（不再需要从标签系统自动加载画师）                                                                                                                                                                              |
+| **根组件**   | `App.vue`                          | 移除第 17 行 `useArtistLoader` 导入和第 69 行调用                                                                                                                                                                           |
+| **核心模块** | `modules/artist-manager/index.vue` | **完整重写**：从空模板实现为完整的画师串管理界面                                                                                                                                                                            |
+| **TS 声明**  | `vite-env.d.ts`                    | 补充 `*.vue` 模块声明以消除 TS 7016 错误                                                                                                                                                                                    |
 
 **新模块功能清单**:
 
 - 画师串 CRUD：新建、编辑、删除配方（全部手动操作）
-- 图片关联：每个配方可上传/选择一张参考图片（原生 input + 拖拽），使用 `compressImage()` 压缩生成 thumbnail(120x120) + preview(短边≤900px)
+- 图片关联：每个配方可上传/选择一张参考图片（原生 input + 拖拽），使用 `compressImage()` 压缩生成 thumbnail(120x120) + preview(短边 ≤900px)
 - 逗号分隔输入：textarea 输入多个画师名（如：mofang, asoul, rafu）
 - 自动去重：输入时实时预览已去重结果（基于小写比较），保存时双保险
 - Tag 形式展示：卡片上使用 `n-tag round` 展示画师列表
@@ -177,15 +209,15 @@
 
 **变更内容**:
 
-| 模块 | 变更项 | 详情 |
-|------|--------|------|
-| **魔法解析** | `HistoryList.vue` | 历史记录列表滚动区域替换为 `n-scrollbar`，统一滚动条样式 |
-| **魔法解析** | `ParseResult.vue` | 解析结果内容区滚动替换为 `n-scrollbar` |
-| **瀑布画廊** | `prompt-manager/index.vue` | 卡片网格、详情弹窗、编辑弹窗滚动区域替换为 `n-scrollbar` |
-| **公共组件** | `PromptDetailViewer.vue` | 提示词文本框替换为 `n-scrollbar`，去除外层冗余滚动容器 |
-| **公共组件** | `PromptDetailForm.vue` | 去除外层冗余滚动容器 |
-| **主题配置** | `naiveTheme.ts` | 添加浅色/暗色主题 `Scrollbar` 样式覆盖，与项目配色保持一致 |
-| **文档** | `README.md` | 更新功能完成度说明（瀑布画廊: 85% → 90%） |
+| 模块         | 变更项                     | 详情                                                       |
+| ------------ | -------------------------- | ---------------------------------------------------------- |
+| **魔法解析** | `HistoryList.vue`          | 历史记录列表滚动区域替换为 `n-scrollbar`，统一滚动条样式   |
+| **魔法解析** | `ParseResult.vue`          | 解析结果内容区滚动替换为 `n-scrollbar`                     |
+| **瀑布画廊** | `prompt-manager/index.vue` | 卡片网格、详情弹窗、编辑弹窗滚动区域替换为 `n-scrollbar`   |
+| **公共组件** | `PromptDetailViewer.vue`   | 提示词文本框替换为 `n-scrollbar`，去除外层冗余滚动容器     |
+| **公共组件** | `PromptDetailForm.vue`     | 去除外层冗余滚动容器                                       |
+| **主题配置** | `naiveTheme.ts`            | 添加浅色/暗色主题 `Scrollbar` 样式覆盖，与项目配色保持一致 |
+| **文档**     | `README.md`                | 更新功能完成度说明（瀑布画廊: 85% → 90%）                  |
 
 **技术实现**:
 
@@ -204,4 +236,4 @@
 
 ---
 
-_最后更新: 2026-04-26_
+_最后更新: 2026-04-26 20:50_

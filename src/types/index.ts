@@ -121,7 +121,7 @@ export interface ParsedImageData {
 
 // ==================== 应用状态 ====================
 
-export type ModuleType = 'tags' | 'prompts' | 'artists' | 'spell';
+export type ModuleType = 'tags' | 'prompts' | 'artists' | 'spell' | 'tutorial';
 
 export interface AppState {
   currentModule: ModuleType;

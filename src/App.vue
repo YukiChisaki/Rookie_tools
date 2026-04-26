@@ -5,7 +5,7 @@
  * @author Chisaki / 68142319
  * @since 2026-04-26
  */
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import {
   Tags,
   FileText,
@@ -15,7 +15,8 @@ import {
   Sparkles,
   Github,
   Download,
-  RefreshCw
+  RefreshCw,
+  BookOpen
 } from 'lucide-vue-next'
 import { darkTheme, useMessage } from 'naive-ui'
 import type { GlobalTheme } from 'naive-ui'
@@ -30,6 +31,7 @@ import TagSelector from './modules/tag-selector/index.vue'
 import PromptManager from './modules/prompt-manager/index.vue'
 import ArtistManager from './modules/artist-manager/index.vue'
 import SpellParser from './modules/spell-parser/index.vue'
+import Tutorial from './modules/tutorial/index.vue'
 
 const currentModule = ref<ModuleType>('spell')
 
@@ -38,6 +40,7 @@ const modules = [
   { id: 'tags' as ModuleType, label: '快速标签', icon: Tags },
   { id: 'prompts' as ModuleType, label: '私人画廊', icon: FileText },
   { id: 'artists' as ModuleType, label: '蜜汁配方', icon: Palette },
+  { id: 'tutorial' as ModuleType, label: '使用教程', icon: BookOpen },
 ]
 
 const promptStore = usePromptStore()
@@ -214,6 +217,7 @@ onMounted(async () => {
                   <SpellParser v-else-if="currentModule === 'spell'" key="spell" />
                   <PromptManager v-else-if="currentModule === 'prompts'" key="prompts" />
                   <ArtistManager v-else-if="currentModule === 'artists'" key="artists" />
+                  <Tutorial v-else-if="currentModule === 'tutorial'" key="tutorial" />
                 </Transition>
               </main>
             </div>

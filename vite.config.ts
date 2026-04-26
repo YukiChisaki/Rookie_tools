@@ -3,6 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import Components from "unplugin-vue-components/vite";
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
 import AutoImport from "unplugin-auto-import/vite";
+import Markdown from "unplugin-vue-markdown/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { resolve } from "node:path";
 
@@ -15,9 +16,18 @@ export default defineConfig(({ mode }) => {
     // GitHub Pages 部署需要设置仓库名作为 base 路径
     base,
     plugins: [
-      vue(),
-      // 按需自动导入 naive-ui 组件
+      // 关键：让 Vue 编译器处理 .md 文件，否则 Markdown 无法编译为 Vue 组件
+      vue({
+        include: [/\.vue$/, /\.md$/],
+      }),
+      // Markdown 文件支持（用于教程文档渲染）
+      Markdown({
+        wrapperClasses: 'markdown-body',
+      }),
+      // 按需自动导入 naive-ui 组件（需支持 .md 文件中的组件）
       Components({
+        extensions: ['vue', 'md'],
+        include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
         resolvers: [NaiveUiResolver()],
         dts: "src/components.d.ts",
       }),
