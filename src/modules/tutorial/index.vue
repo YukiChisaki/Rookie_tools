@@ -11,7 +11,7 @@
 </script>
 
 <template>
-    <div class="h-full w-full overflow-y-auto bg-background">
+    <n-scrollbar class="h-full w-full bg-background">
         <!-- 教程内容容器 -->
         <div class="max-w-4xl mx-auto px-6 py-8 pb-20">
             <!-- Markdown 内容渲染区域 -->
@@ -19,7 +19,7 @@
                 <TutorialContent />
             </article>
         </div>
-    </div>
+    </n-scrollbar>
 </template>
 
 <style scoped>

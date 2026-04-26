@@ -450,7 +450,7 @@ function formatDate(timestamp: number): string {
                         <template #trigger>
                           <button
                             @click.stop="cardNormalCopyBtn.doCopy(formatters.normal(chain.artistNames.map(n => n.trim().toLowerCase()).filter(Boolean)))"
-                            class="!p-1 text-sm  rounded-xl flex items-center gap-1 font-medium bg-[--primary] text-white hover:!bg-white hover:!text-primary  hover:-translate-y-0.5 transition-all duration-200">
+                            class="!p-1 text-sm  rounded-xl flex items-center gap-1 font-medium bg-primary text-white hover:!bg-white hover:!text-primary  hover:-translate-y-0.5 transition-all duration-200">
                             <Parentheses class="w-4 h-4" />
                             {{ cardNormalCopyBtn.text }}
                           </button>
