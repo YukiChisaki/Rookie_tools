@@ -92,6 +92,8 @@ export default defineConfig(({ mode }) => {
       alias: {
         // @ 符号指向 src 目录
         "@": resolve(__dirname, "src"),
+        // @docs 指向 docs 目录（用于教程文档中引用截图）
+        "@docs": resolve(__dirname, "docs"),
       },
     },
     server: {
