@@ -4,6 +4,7 @@ import { db } from '../services/db';
 import type { PromptRecord, TagWithWeight, ImageParameters } from '../types';
 import { STORES } from '../types';
 import { compressImage } from '../utils/imageCompressor';
+import { generateId } from '../utils/id';
 
 export const usePromptStore = defineStore('prompt', () => {
   // State
@@ -48,7 +49,7 @@ export const usePromptStore = defineStore('prompt', () => {
       : undefined;
     
     const prompt: PromptRecord = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       name: data.name,
       positive: data.positive,
       negative: data.negative,
@@ -131,7 +132,7 @@ export const usePromptStore = defineStore('prompt', () => {
   function createEmptyPrompt(): PromptRecord {
     const now = Date.now();
     return {
-      id: crypto.randomUUID(),
+      id: generateId(),
       name: '新建提示词',
       positive: '',
       negative: '',

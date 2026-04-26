@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-04-26
+
+### [REFACTOR-001] UUID 生成方式迁移 — 原生 crypto.randomUUID() 替换为 cuid2
+
+**类型**: 重构 (Refactoring)
+
+**变更内容**:
+
+| 模块 | 变更项 | 详情 |
+|------|--------|------|
+| **依赖** | `package.json` | 新增 `@paralleldrive/cuid2` 依赖 |
+| **工具函数** | `utils/id.ts` | 使用 `cuid2` 的 `createId()` 替代 `crypto.randomUUID()`，添加完整 JSDoc 注释 |
+| **状态管理** | `stores/tag.ts` | 导入 `generateId`，替换 2 处 `crypto.randomUUID()` 调用 |
+| **状态管理** | `stores/prompt.ts` | 导入 `generateId`，替换 2 处 `crypto.randomUUID()` 调用 |
+| **状态管理** | `stores/artist.ts` | 导入 `generateId`，替换 1 处 `crypto.randomUUID()` 调用，更新作者信息 |
+| **服务** | `services/spellParser.ts` | 导入 `generateId`，替换 1 处 `crypto.randomUUID()` 调用 |
+| **开发规范** | `.codebuddy/rules/前端项目开发规范.mdc` | 4.4 节新增 UUID 生成规范：强制使用 `cuid2`，严禁使用原生 `crypto.randomUUID()` |
+
+**技术实现**:
+
+- 安装 `@paralleldrive/cuid2` 库（v2.x），提供更安全、更短的唯一标识符
+- 统一通过 `utils/id.ts` 的 `generateId()` 函数生成 ID，便于后续维护和替换
+- cuid2 优势：
+  - 比 UUID 更短（25 字符 vs 36 字符）
+  - 字典序排序友好
+  - 更安全（无时间戳信息泄露）
+  - 支持现代浏览器的 CSP 安全策略
+
+**影响范围**:
+
+- 所有新创建的标签、提示词记录、画师串、解析图片数据均使用新 ID 格式
+- 旧数据不受影响（ID 格式只是生成方式改变，字符串均可正常存储）
+
+---
+
 ## 2026-04-25
 
 ### [DOC-001] 文档对齐更新
@@ -133,4 +168,4 @@
 
 ---
 
-_最后更新: 2026-04-25_
+_最后更新: 2026-04-26_

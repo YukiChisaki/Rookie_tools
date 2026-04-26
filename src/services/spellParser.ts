@@ -1,6 +1,7 @@
 import ExifReader from 'exifreader';
 import type { ParsedImageData, GeneratorType } from '../types';
 import { compressImage } from '../utils/imageCompressor';
+import { generateId } from '../utils/id';
 
 interface RawMetadata {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -649,7 +650,7 @@ export async function parseImage(file: File): Promise<ParseResult> {
 
     // 构建解析结果
     const result: ParsedImageData = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       fileName: file.name,
       thumbnailData,
       previewData,

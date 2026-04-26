@@ -1,7 +1,7 @@
 /**
  * 画师串管理 Store（蜜汁配方模块）
  * 负责画师串的 CRUD 操作、搜索过滤和数据持久化
- * @author CodeBuddy
+ * @author Chisaki (ID: 68142319)
  * @since 2026-04-24 21:14:00
  */
 
@@ -10,6 +10,7 @@ import { defineStore } from 'pinia';
 import { db } from '../services/db';
 import type { ArtistChain } from '../types';
 import { STORES } from '../types';
+import { generateId } from '../utils/id';
 
 export const useArtistStore = defineStore('artist', () => {
   // ============ State ============
@@ -102,7 +103,7 @@ export const useArtistStore = defineStore('artist', () => {
   ): Promise<ArtistChain> {
     const now = Date.now();
     const chain: ArtistChain = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       name,
       artistNames,
       thumbnailData,

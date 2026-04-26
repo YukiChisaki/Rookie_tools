@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { db } from '../services/db';
 import type { Tag, TagCategory } from '../types';
 import { STORES } from '../types';
+import { generateId } from '../utils/id';
 
 export const useTagStore = defineStore('tag', () => {
   // State
@@ -70,7 +71,7 @@ export const useTagStore = defineStore('tag', () => {
   async function addTag(tag: Omit<Tag, 'id' | 'useCount'>) {
     const newTag: Tag = {
       ...tag,
-      id: crypto.randomUUID(),
+      id: generateId(),
       useCount: 0,
     };
     await db.put(STORES.TAGS, newTag);
@@ -101,7 +102,7 @@ export const useTagStore = defineStore('tag', () => {
   async function importTags(newTags: Omit<Tag, 'id' | 'useCount'>[]) {
     const tagsToAdd: Tag[] = newTags.map(tag => ({
       ...tag,
-      id: crypto.randomUUID(),
+      id: generateId(),
       useCount: 0,
     }));
 
