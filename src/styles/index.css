@@ -17,6 +17,10 @@
     --border: #e2e8f0;
     --ring: 52, 152, 219;
     --radius: 0.75rem;
+    /* 主色半透明变体 */
+    --primary-light: rgba(52, 152, 219, 0.1);
+    --primary-lighter: rgba(52, 152, 219, 0.05);
+    --primary-medium: rgba(52, 152, 219, 0.2);
   }
 
   .dark {
@@ -33,6 +37,10 @@
     --border: #334155;
     --ring: 52, 152, 219;
     --radius: 0.75rem;
+    /* 主色半透明变体 - 暗色模式 */
+    --primary-light: rgba(52, 152, 219, 0.15);
+    --primary-lighter: rgba(52, 152, 219, 0.08);
+    --primary-medium: rgba(52, 152, 219, 0.25);
   }
 
   * {

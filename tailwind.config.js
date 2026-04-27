@@ -22,7 +22,9 @@ export default {
         primary: {
           DEFAULT: 'rgb(var(--primary))',
           foreground: 'var(--primary-foreground)',
-          light: '#60A5FA',
+          light: 'var(--primary-light)',
+          lighter: 'var(--primary-lighter)',
+          medium: 'var(--primary-medium)',
           dark: '#2563EB',
         },
         secondary: {

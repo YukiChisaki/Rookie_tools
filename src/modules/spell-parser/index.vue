@@ -4,7 +4,7 @@ import { useSpellStore } from '../../stores/spell';
 import { usePromptStore } from '../../stores/prompt';
 import { CheckCircle2 } from 'lucide-vue-next';
 import { useDialog, useMessage } from 'naive-ui';
-import ImageUploader from './components/ImageUploader.vue';
+import ImageUploader from '@/components/ui/ImageUploader.vue';
 import ParseResult from './components/ParseResult.vue';
 import HistoryList from './components/HistoryList.vue';
 
@@ -136,69 +136,41 @@ function handleCloseResult() {
   <div class="h-full flex">
     <!-- 左侧历史记录 -->
     <div class="w-60 bg-card border-r border-border flex flex-col shrink-0">
-      <HistoryList
-        :images="spellStore.sortedImages"
-        :current-id="spellStore.currentImage?.id"
-        @select="handleSelectFromHistory"
-        @delete="handleDeleteHistory"
-      />
+      <HistoryList :images="spellStore.sortedImages" :current-id="spellStore.currentImage?.id"
+        @select="handleSelectFromHistory" @delete="handleDeleteHistory" />
     </div>
 
     <!-- 右侧主区域 -->
     <div class="flex-1 overflow-hidden">
       <!-- 上传区域 -->
-      <ImageUploader
-        v-if="!spellStore.hasCurrentImage"
-        :is-loading="spellStore.isLoading"
-        @upload="handleFileUpload"
-      />
+      <ImageUploader v-if="!spellStore.hasCurrentImage" :is-loading="spellStore.isLoading" @upload="handleFileUpload" />
 
       <!-- 解析结果 -->
-      <ParseResult
-        v-else-if="spellStore.currentImage"
-        :image="spellStore.currentImage"
-        @copy="handleCopy"
-        @import="handleImportToPrompts"
-        @close="handleCloseResult"
-      />
+      <ParseResult v-else-if="spellStore.currentImage" :image="spellStore.currentImage" @copy="handleCopy"
+        @import="handleImportToPrompts" @close="handleCloseResult" />
     </div>
 
     <!-- 错误提示 -->
-    <div
-      v-if="spellStore.error"
-      class="fixed bottom-6 right-6 z-50 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3"
-    >
+    <div v-if="spellStore.error"
+      class="fixed bottom-6 right-6 z-50 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
       <span class="text-sm">{{ spellStore.error }}</span>
-      <button
-        @click="spellStore.clearError"
-        class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded-full"
-      >
+      <button @click="spellStore.clearError"
+        class="w-6 h-6 flex items-center justify-center hover:bg-white/20 rounded-full">
         ×
       </button>
     </div>
 
     <!-- 成功提示 Toast -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="translate-y-2 opacity-0"
-      enter-to-class="translate-y-0 opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="translate-y-0 opacity-100"
-      leave-to-class="translate-y-2 opacity-0"
-    >
-      <div
-        v-if="toast.show"
-        class="fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border"
-        :class="[
+    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="translate-y-2 opacity-0"
+      enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in"
+      leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-2 opacity-0">
+      <div v-if="toast.show"
+        class="fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border" :class="[
           toast.type === 'success'
             ? 'bg-green-50 border-green-200 text-green-800'
             : 'bg-red-50 border-red-200 text-red-800'
-        ]"
-      >
-        <CheckCircle2
-          v-if="toast.type === 'success'"
-          class="w-5 h-5 text-green-500"
-        />
+        ]">
+        <CheckCircle2 v-if="toast.type === 'success'" class="w-5 h-5 text-green-500" />
         <span class="text-sm font-medium">{{ toast.message }}</span>
       </div>
     </Transition>

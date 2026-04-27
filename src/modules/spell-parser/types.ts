@@ -1,14 +1,5 @@
 import type { ParsedImageData } from '../../types';
 
-export interface ImageUploaderProps {
-  isLoading?: boolean;
-}
-
-export interface ImageUploaderEmits {
-  (e: 'upload', file: File): void;
-  (e: 'drag-over', value: boolean): void;
-}
-
 export interface ParseResultProps {
   image: ParsedImageData;
 }

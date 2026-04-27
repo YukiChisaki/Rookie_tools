@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ImageUploader: typeof import('./components/ui/ImageUploader.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
@@ -21,6 +22,8 @@ declare module 'vue' {
     NPopover: typeof import('naive-ui')['NPopover']
     NScrollbar: typeof import('naive-ui')['NScrollbar']
     NTag: typeof import('naive-ui')['NTag']
+    NUpload: typeof import('naive-ui')['NUpload']
+    NUploadDragger: typeof import('naive-ui')['NUploadDragger']
     PromptDetailForm: typeof import('./components/PromptDetailForm.vue')['default']
     PromptDetailViewer: typeof import('./components/PromptDetailViewer.vue')['default']
   }

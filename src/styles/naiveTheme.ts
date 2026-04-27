@@ -88,6 +88,14 @@ export const themeOverrides: GlobalThemeOverrides = {
   Tag: {
     borderRadius: '8px',
   },
+
+  // Upload 上传样式覆盖
+  Upload: {
+    draggerColor: '#f8fafc',
+    draggerBorderColor: '#e2e8f0',
+    draggerBorderColorHover: '#3498db',
+    draggerBorderHover: '2px dashed #3498db',
+  },
   
   // Select 选择器样式覆盖
   Select: {
@@ -141,6 +149,14 @@ export const darkThemeOverrides: GlobalThemeOverrides = {
   Card: {
     color: '#1e293b',
     colorModal: '#1e293b',
+  },
+
+  // Upload 上传样式覆盖 - 暗色模式
+  Upload: {
+    draggerColor: '#1e293b',
+    draggerBorderColor: '#334155',
+    draggerBorderColorHover: '#3498db',
+    draggerBorderHover: '2px dashed #3498db',
   },
 
   // Scrollbar 滚动条样式覆盖 - 暗色模式
