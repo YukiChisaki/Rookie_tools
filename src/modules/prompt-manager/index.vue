@@ -134,6 +134,8 @@ const previewImageUrl = computed(() => {
 const hasImagePreview = computed(() => !!previewImageUrl.value);
 
 // 校验并设置图片文件
+// 当前仅支持文件选择器/拖拽上传，来源为本地，无需归档原图
+// 未来若增加剪贴板粘贴支持，需在此处判断来源并调用 useImageArchive.saveImage()
 function processImageFile(file: File | null) {
   if (!file) return;
 

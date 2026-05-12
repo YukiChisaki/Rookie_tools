@@ -2,17 +2,22 @@
 import { onMounted, ref } from 'vue';
 import { useSpellStore } from '../../stores/spell';
 import { usePromptStore } from '../../stores/prompt';
-import { CheckCircle2 } from 'lucide-vue-next';
+import { CheckCircle2, FolderPlus } from 'lucide-vue-next';
 import { useDialog, useMessage } from 'naive-ui';
 import ImageUploader from '@/components/ui/ImageUploader.vue';
 import ParseResult from './components/ParseResult.vue';
 import HistoryList from './components/HistoryList.vue';
 import DataIOButtons from '../../components/ui/DataIOButtons.vue';
+import { useImageArchive } from '../../composables/useImageArchive';
+import type { ImageSource } from '../../composables/useImageArchive';
 
 const spellStore = useSpellStore();
 const promptStore = usePromptStore();
 const dialog = useDialog();
 const message = useMessage();
+
+// 原图归档功能
+const { isSupported: isArchiveSupported, isConfigured: isArchiveConfigured, selectDirectory, saveImage } = useImageArchive();
 
 // Toast 提示状态
 const toast = ref({
@@ -39,8 +44,33 @@ onMounted(() => {
   spellStore.loadHistory();
 });
 
-// 处理文件上传
-async function handleFileUpload(file: File) {
+// 处理文件上传 — 接收 source 参数区分图片来源
+async function handleFileUpload(file: File, source: ImageSource) {
+  // 剪贴板来源的图片自动归档原图
+  if (source === 'clipboard') {
+    // 未配置归档目录时引导用户选择
+    if (isArchiveSupported.value && !isArchiveConfigured.value) {
+      dialog.info({
+        title: '设置原图归档目录',
+        content: '检测到您粘贴了图片，可以将原图自动保存到本地目录中。是否现在选择归档目录？',
+        positiveText: '选择目录',
+        negativeText: '暂不设置',
+        onPositiveClick: async () => {
+          const success = await selectDirectory();
+          if (success) {
+            message.success('归档目录已设置，后续粘贴的图片将自动保存原图');
+            // 设置成功后归档当前图片
+            saveImage(file, 'spell-parser', 'clipboard');
+          }
+        },
+      });
+    } else if (isArchiveConfigured.value) {
+      // 已配置则直接归档
+      saveImage(file, 'spell-parser', 'clipboard');
+    }
+  }
+
+  // 执行正常的解析流程
   await spellStore.parseAndSave(file);
 }
 

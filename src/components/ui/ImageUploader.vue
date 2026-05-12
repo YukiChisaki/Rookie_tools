@@ -3,10 +3,12 @@
   @since 2026-04-27 14:50:00
   通用图片上传组件 - 基于 Naive UI n-upload + n-upload-dragger
   拖拽和点击上传由 n-upload 内置处理，粘贴上传需手动监听
+  emit 携带 source 参数区分图片来源：'local'（文件选择器/拖拽）或 'clipboard'（剪贴板粘贴）
 -->
 <script setup lang="ts">
 import type { UploadCustomRequestOptions } from 'naive-ui'
 import { Image as ImageIcon, Loader2 } from 'lucide-vue-next'
+import type { ImageSource } from '../../composables/useImageArchive'
 
 /** 组件 Props 定义 */
 interface Props {
@@ -22,9 +24,9 @@ interface Props {
     description?: string
 }
 
-/** 组件 Emits 定义 */
+/** 组件 Emits 定义 — source 区分图片来源，仅 clipboard 来源触发原图归档 */
 interface Emits {
-    (e: 'upload', file: File): void
+    (e: 'upload', file: File, source: ImageSource): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -39,14 +41,14 @@ const emit = defineEmits<Emits>()
 
 /**
  * 自定义上传请求 - 拦截 n-upload 的上传流程
- * 不执行真正的网络请求，直接从 file 对象中获取原生 File 并 emit
+ * 来源为文件选择器或拖拽，标记为 'local'
  */
 const handleCustomRequest = (options: UploadCustomRequestOptions) => {
     const { file, onFinish } = options
     const rawFile = file.file
 
     if (rawFile && rawFile.type.startsWith('image/')) {
-        emit('upload', rawFile)
+        emit('upload', rawFile, 'local')
     }
 
     // 标记完成，避免 n-upload 内部状态异常
@@ -55,7 +57,8 @@ const handleCustomRequest = (options: UploadCustomRequestOptions) => {
 
 /**
  * 全局粘贴事件处理
- * n-upload 不内置粘贴功能，需手动监听 window paste 事件
+ * 来源为剪贴板粘贴，标记为 'clipboard'
+ * 仅剪贴板来源的图片会触发原图归档保存
  */
 const handlePaste = (event: ClipboardEvent) => {
     const items = event.clipboardData?.items
@@ -65,7 +68,7 @@ const handlePaste = (event: ClipboardEvent) => {
         if (item.type.startsWith('image/')) {
             const file = item.getAsFile()
             if (file) {
-                emit('upload', file)
+                emit('upload', file, 'clipboard')
                 break
             }
         }

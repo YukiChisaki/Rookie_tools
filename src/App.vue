@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Rookie Tools 根组件
- * 包含导航布局、主题切换、PWA 安装/更新功能
+ * 包含导航布局、主题切换、PWA 安装/更新功能、原图归档目录配置
  * @author Chisaki / 68142319
  * @since 2026-04-26
  */
@@ -16,13 +16,17 @@ import {
   Github,
   Download,
   RefreshCw,
-  BookOpen
+  BookOpen,
+  FolderPlus,
+  FolderOpen,
+  FolderX,
 } from 'lucide-vue-next'
 import { darkTheme, useMessage } from 'naive-ui'
 import type { GlobalTheme } from 'naive-ui'
 import { usePromptStore } from './stores/prompt'
 import { useArtistStore } from './stores/artist'
 import { usePwa } from './composables/usePwa'
+import { useImageArchive } from './composables/useImageArchive'
 import { themeOverrides, darkThemeOverrides } from './styles/naiveTheme'
 import type { ModuleType } from './types'
 
@@ -48,6 +52,16 @@ const artistStore = useArtistStore()
 
 // PWA 安装与更新
 const { canInstall, isInstalled, needUpdate, installApp, updateApp } = usePwa()
+
+// 原图归档功能
+const {
+  isSupported: isArchiveSupported,
+  isConfigured: isArchiveConfigured,
+  directoryName: archiveDirectoryName,
+  selectDirectory: selectArchiveDirectory,
+  disconnect: disconnectArchive,
+  initialize: initializeArchive,
+} = useImageArchive()
 
 // Dark mode toggle
 const isDark = ref(false)
@@ -116,6 +130,7 @@ onMounted(async () => {
   await Promise.all([
     promptStore.loadPrompts(),
     artistStore.loadArtists(),
+    initializeArchive(),
   ])
 })
 </script>
@@ -166,6 +181,55 @@ onMounted(async () => {
                 ]" :title="isInstalled ? '应用已安装' : '安装应用到桌面'">
                   <Download class="w-[18px] h-[18px]" />
                 </button>
+                <!-- 原图归档目录按钮 — 仅支持 File System Access API 时显示 -->
+                <n-popover v-if="isArchiveSupported" trigger="click" placement="bottom-end" :show-arrow="false" :width="240">
+                  <template #trigger>
+                    <button :class="[
+                      'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative',
+                      isArchiveConfigured
+                        ? 'text-primary bg-primary/10 hover:bg-primary/20'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ]" :title="isArchiveConfigured ? '原图归档目录' : '设置原图归档目录'">
+                      <FolderOpen v-if="isArchiveConfigured" class="w-[18px] h-[18px]" />
+                      <FolderPlus v-else class="w-[18px] h-[18px]" />
+                      <!-- 已配置时的绿色指示点 -->
+                      <span v-if="isArchiveConfigured"
+                        class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-card">
+                      </span>
+                    </button>
+                  </template>
+                  <div class="py-2">
+                    <!-- 已配置状态 -->
+                    <template v-if="isArchiveConfigured">
+                      <div class="px-3 pb-2 mb-2 border-b border-border">
+                        <p class="text-xs text-muted-foreground mb-1">归档目录</p>
+                        <p class="text-sm font-medium text-foreground truncate">{{ archiveDirectoryName }}</p>
+                      </div>
+                      <button @click="selectArchiveDirectory"
+                        class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted rounded-lg transition-colors duration-200 flex items-center gap-2">
+                        <FolderPlus class="w-4 h-4 text-muted-foreground" />
+                        更换目录
+                      </button>
+                      <button @click="disconnectArchive"
+                        class="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                        <FolderX class="w-4 h-4" />
+                        断开连接
+                      </button>
+                    </template>
+                    <!-- 未配置状态 -->
+                    <template v-else>
+                      <div class="px-3 pb-2 mb-2 border-b border-border">
+                        <p class="text-sm font-medium text-foreground mb-1">原图归档</p>
+                        <p class="text-xs text-muted-foreground">将剪贴板粘贴的图片原图保存到本地目录</p>
+                      </div>
+                      <button @click="selectArchiveDirectory"
+                        class="w-full px-3 py-2 text-left text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                        <FolderPlus class="w-4 h-4" />
+                        选择归档目录
+                      </button>
+                    </template>
+                  </div>
+                </n-popover>
                 <!-- Theme Toggle Button -->
                 <button @click="toggleTheme"
                   class="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
