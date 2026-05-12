@@ -11,6 +11,7 @@ import {
   Archive,
   ImagePlus,
 } from 'lucide-vue-next';
+import DataIOButtons from '../../components/ui/DataIOButtons.vue';
 import { MasonryWall } from '@yeger/vue-masonry-wall';
 import { useDialog, useMessage } from 'naive-ui';
 import { usePromptStore } from '../../stores/prompt';
@@ -324,11 +325,8 @@ async function copyFullPrompt() {
           <input v-model="searchQuery" type="text" placeholder="搜索提示词..." class="input-field pl-10 text-sm w-[60%]" />
         </div>
 
-        <!-- TODO:批量导入 -->
-        <n-button @click="() => console.log('批量导入')" disabled type="info" class="text-sm flex items-center gap-2">
-          <Plus class="w-4 h-4" />
-          TODO批量导入
-        </n-button>
+        <!-- 导入导出按钮 -->
+        <DataIOButtons module="prompts" />
         <!-- 新建按钮 -->
         <button @click="openCreateModal" class="btn-primary text-sm flex items-center gap-2">
           <Plus class="w-4 h-4" />

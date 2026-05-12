@@ -7,6 +7,7 @@ import { useDialog, useMessage } from 'naive-ui';
 import ImageUploader from '@/components/ui/ImageUploader.vue';
 import ParseResult from './components/ParseResult.vue';
 import HistoryList from './components/HistoryList.vue';
+import DataIOButtons from '../../components/ui/DataIOButtons.vue';
 
 const spellStore = useSpellStore();
 const promptStore = usePromptStore();
@@ -136,6 +137,11 @@ function handleCloseResult() {
   <div class="h-full flex">
     <!-- 左侧历史记录 -->
     <div class="w-60 bg-card border-r border-border flex flex-col shrink-0">
+      <!-- 左侧顶栏：标题 + 导入导出 -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+        <span class="text-sm font-semibold text-foreground">历史记录</span>
+        <DataIOButtons module="spell" />
+      </div>
       <HistoryList :images="spellStore.sortedImages" :current-id="spellStore.currentImage?.id"
         @select="handleSelectFromHistory" @delete="handleDeleteHistory" />
     </div>

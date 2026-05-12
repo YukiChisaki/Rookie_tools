@@ -5,6 +5,7 @@ import type { PromptRecord, TagWithWeight, ImageParameters } from '../types';
 import { STORES } from '../types';
 import { compressImage } from '../utils/imageCompressor';
 import { generateId } from '../utils/id';
+import type { ImportResult } from '../types/data-io';
 
 export const usePromptStore = defineStore('prompt', () => {
   // State
@@ -199,6 +200,41 @@ export const usePromptStore = defineStore('prompt', () => {
     });
   }
 
+  /**
+   * 批量导入提示词数据
+   * 按 ID 去重，已有 ID 的记录自动跳过
+   * @param items 待导入的提示词数组
+   * @returns 导入结果统计
+   */
+  async function bulkImportPrompts(items: PromptRecord[]): Promise<ImportResult> {
+    const existingIds = new Set(prompts.value.map((p) => p.id))
+    const toImport = items.filter((item) => !existingIds.has(item.id))
+
+    if (toImport.length === 0) {
+      return { succeeded: 0, skipped: items.length, failed: 0 }
+    }
+
+    try {
+      // 深拷贝去除 Vue 响应式代理
+      const cleanItems = JSON.parse(JSON.stringify(toImport))
+      await db.bulkPut(STORES.PROMPTS, cleanItems)
+      prompts.value = [...prompts.value, ...cleanItems]
+
+      return {
+        succeeded: toImport.length,
+        skipped: items.length - toImport.length,
+        failed: 0,
+      }
+    } catch (err) {
+      console.error('[PromptStore] 批量导入失败:', err)
+      return {
+        succeeded: 0,
+        skipped: items.length - toImport.length,
+        failed: toImport.length,
+      }
+    }
+  }
+
   return {
     prompts,
     currentPrompt,
@@ -213,5 +249,6 @@ export const usePromptStore = defineStore('prompt', () => {
     createEmptyPrompt,
     importFromMetadata,
     createPromptWithImage,
+    bulkImportPrompts,
   };
 });

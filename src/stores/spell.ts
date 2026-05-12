@@ -4,6 +4,7 @@ import { db } from '../services/db';
 import { parseImage, revokePreviewUrl } from '../services/spellParser';
 import type { ParsedImageData } from '../types';
 import { STORES } from '../types';
+import type { ImportResult } from '../types/data-io';
 
 const MAX_HISTORY_ITEMS = 50;
 
@@ -185,6 +186,40 @@ export const useSpellStore = defineStore('spell', () => {
     }
   }
 
+  /**
+   * 批量导入魔法解析数据
+   * 按 ID 去重，已有 ID 的记录自动跳过
+   * @param items 待导入的解析图片数组
+   * @returns 导入结果统计
+   */
+  async function bulkImportImages(items: ParsedImageData[]): Promise<ImportResult> {
+    const existingIds = new Set(parsedImages.value.map((i) => i.id))
+    const toImport = items.filter((item) => !existingIds.has(item.id))
+
+    if (toImport.length === 0) {
+      return { succeeded: 0, skipped: items.length, failed: 0 }
+    }
+
+    try {
+      const cleanItems = JSON.parse(JSON.stringify(toImport))
+      await db.bulkPut(STORES.PARSED_IMAGES, cleanItems)
+      parsedImages.value = [...parsedImages.value, ...cleanItems]
+
+      return {
+        succeeded: toImport.length,
+        skipped: items.length - toImport.length,
+        failed: 0,
+      }
+    } catch (err) {
+      console.error('[SpellStore] 批量导入失败:', err)
+      return {
+        succeeded: 0,
+        skipped: items.length - toImport.length,
+        failed: toImport.length,
+      }
+    }
+  }
+
   return {
     // State
     parsedImages,
@@ -207,5 +242,6 @@ export const useSpellStore = defineStore('spell', () => {
     clearError,
     loadFromHistory,
     clearAllHistory,
+    bulkImportImages,
   };
 });

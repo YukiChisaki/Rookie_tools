@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    DataIOButtons: typeof import('./components/ui/DataIOButtons.vue')['default']
     ImageUploader: typeof import('./components/ui/ImageUploader.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']

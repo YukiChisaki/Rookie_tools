@@ -11,6 +11,7 @@ import { db } from '../services/db';
 import type { ArtistChain } from '../types';
 import { STORES } from '../types';
 import { generateId } from '../utils/id';
+import type { ImportResult } from '../types/data-io';
 
 export const useArtistStore = defineStore('artist', () => {
   // ============ State ============
@@ -148,6 +149,40 @@ export const useArtistStore = defineStore('artist', () => {
     searchQuery.value = query;
   }
 
+  /**
+   * 批量导入画师串数据
+   * 按 ID 去重，已有 ID 的记录自动跳过
+   * @param items 待导入的画师串数组
+   * @returns 导入结果统计
+   */
+  async function bulkImportChains(items: ArtistChain[]): Promise<ImportResult> {
+    const existingIds = new Set(artistChains.value.map((c) => c.id))
+    const toImport = items.filter((item) => !existingIds.has(item.id))
+
+    if (toImport.length === 0) {
+      return { succeeded: 0, skipped: items.length, failed: 0 }
+    }
+
+    try {
+      const cleanItems = JSON.parse(JSON.stringify(toImport))
+      await db.bulkPut(STORES.ARTIST_CHAINS, cleanItems)
+      artistChains.value = [...artistChains.value, ...cleanItems]
+
+      return {
+        succeeded: toImport.length,
+        skipped: items.length - toImport.length,
+        failed: 0,
+      }
+    } catch (err) {
+      console.error('[ArtistStore] 批量导入失败:', err)
+      return {
+        succeeded: 0,
+        skipped: items.length - toImport.length,
+        failed: toImport.length,
+      }
+    }
+  }
+
   return {
     artistChains,
     isLoading,
@@ -160,5 +195,6 @@ export const useArtistStore = defineStore('artist', () => {
     updateChain,
     deleteChain,
     setSearchQuery,
+    bulkImportChains,
   };
 });

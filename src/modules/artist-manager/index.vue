@@ -21,6 +21,7 @@ import {
   ImagePlus,
   Parentheses,
 } from 'lucide-vue-next'
+import DataIOButtons from '../../components/ui/DataIOButtons.vue'
 import { MasonryWall } from '@yeger/vue-masonry-wall'
 import { useDialog, useMessage } from 'naive-ui'
 import { useArtistStore } from '../../stores/artist'
@@ -385,6 +386,7 @@ function formatDate(timestamp: number): string {
           <input v-model="searchQuery" type="text" placeholder="搜索配方、画师或标签..."
             class="input-field pl-10 text-sm w-full" />
         </div>
+        <DataIOButtons module="artists" />
         <button @click="openCreateModal" class="btn-primary text-sm flex items-center gap-2 shrink-0">
           <Plus class="w-4 h-4" />
           新建配方
